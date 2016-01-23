@@ -35,15 +35,16 @@ class gps2zmq:
 
 			while report['class'] != 'SKY':
  		        	report = self.session.next()
-			sats=report['satellites']
-			sats=map( lambda x : dict(x) , sats )
-			uses=0
-			for sat in sats:
-				if sat['used']:
-					uses=uses+1
-			nsat={'nsat':str(uses)+'/'+str(len(sats)),'satellites':sats}
-			fix.update(nsat)
-			self.datakeys=fix.keys()
+			if 'satellites' in report:
+				sats=report['satellites']
+				sats=map( lambda x : dict(x) , sats )
+				uses=0
+				for sat in sats:
+					if sat['used']:
+						uses=uses+1
+				nsat={'nsat':str(uses)+'/'+str(len(sats)),'satellites':sats}
+				fix.update(nsat)
+				self.datakeys=fix.keys()
 			#print self.datakeys
 			socket.send(mogrify('GPS',fix))
 	except StopIteration:
@@ -56,16 +57,25 @@ class gps2zmq:
 
 
      def getSystemClockData(self):
+	rst=commands.getoutput('ntpq -c kern')
+	out=rst.split('\n')[1:]
+	res={}
+	for line in out:
+		dummy=line.split(':')
+		if len(dummy)!=2:
+			continue
+		else:
+			key=dummy[0]
+			value=dummy[1]
+			res[key]=value
 
-		rst=commands.getoutput('ntpq -c kern')
-		out=rst.split()
-	        ppm=float(out[5])
-		pllOffset=float(out[2])
-	        maxError=float(out[8])
-		Error=float(out[11])
+	ppm=float(res['pll frequency'])
+	pllOffset=float(res['pll offset'])
+	maxError=float(res['maximum error'])
+	Error=float(res['estimated error'])
 
-		msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error}
-		return msg
+	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error}
+	return msg
 
  
 if __name__ == '__main__':

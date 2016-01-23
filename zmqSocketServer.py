@@ -44,7 +44,7 @@ def clientthread(conn):
     socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
     #Sending message to connected client
-    conn.send('OK.CronoStamper socket server.\n') #send only takes string
+    #conn.send('OK.CronoStamper socket server.\n') #send only takes string
      
     #infinite loop so that function do not terminate and thread do not end.
     while True:
@@ -59,7 +59,7 @@ def clientthread(conn):
     conn.close()
  
 #now keep talking with the client
-while 1:
+while True:
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
     print 'Connected with ' + addr[0] + ':' + str(addr[1])

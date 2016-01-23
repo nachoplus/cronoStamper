@@ -26,11 +26,20 @@ pi=pigpio.pi()
 def getSystemClockData():
 	global ppm,pllOffset
 	rst=commands.getoutput('ntpq -c kern')
-	out=rst.split()
-        ppm=float(out[5])
-	pllOffset=float(out[2])
-        maxError=float(out[8])
-	Error=float(out[11])
+	out=rst.split('\n')[1:]
+	res={}
+	for line in out:
+		dummy=line.split(':')
+		if len(dummy)!=2:
+			continue
+		else:
+			key=dummy[0]
+			value=dummy[1]
+			res[key]=value
+        ppm=float(res['pll frequency'])
+	pllOffset=float(res['pll offset'])
+        maxError=float(res['maximum error'])
+	Error=float(res['estimated error'])
 
 
 
