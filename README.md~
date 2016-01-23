@@ -44,7 +44,6 @@ Edit some files
 >(Comment out the line like "2:23:respawn:/sbin/getty -L ttyAMA0 115200 vt100"  by putting a hash (#) at the start of the line.  Note that the line was not  2:23 on my version of Linux, so be sure to look for the actual line with ttyAMA0.  It was the last line of the file, as it happens).
 >nano /boot/config.txt - Add dtoverlay=pps-gpio,gpiopin=18 on a new line
 >nano /etc/modules – Add pps-gpio on a new line, if it is not already present.
->nano /etc/default/gpsd  Set GPSD_OPTIONS="-n" and DEVICE='/dev/ttyAMA0'
 >reboot
 
 >apt-get install pps-tools
