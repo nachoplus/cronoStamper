@@ -149,13 +149,7 @@ Get the pigpiod daemon http://abyz.co.uk/rpi/pigpio/index.html and compile
 
 >sudo make install
 
-Start on boot
 
->nano /etc/rc.local 
-
-at the end of the file include this lines:
-
->pigpiod
 
 Donwload FLASK for the embebeded web server
 
@@ -183,9 +177,22 @@ Install the python bindings
 
 
 
+Now add a new user to run cronostamper daemons under:
 
+>adduser cronos
 
-
-Get cronoStamper software (this)
+Log in that user and get cronoStamper software (this)
 
 >git clone https://github.com/nachoplus/cronoStamper.git
+
+### Start on boot
+
+>nano /etc/rc.local 
+
+at the end of the file include this lines:
+
+>pigpiod
+
+>/home/cronos/cronostamper/start.sh
+
+
