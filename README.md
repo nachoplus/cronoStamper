@@ -26,9 +26,9 @@ boot the raspberry log as root and run the following commands:
 
 > ---> Expand Filesystem  -> //Do it
 
->apt-get install nano apt-utils bash-completion rpi-update raspi-config unzip make gcc
+>apt-get install nano apt-utils bash-completion rpi-update raspi-config 
 
->apt-get install minicom git
+>apt-get install minicom git unzip make gcc g++ python-pip
 
 >rpi-update 
 
@@ -78,13 +78,13 @@ The supplied version of NTPD on the Raspberry Pi doesn’t support PPS so we nee
 
 Check last version from http://www.ntp.org/downloads.html
 
->wget http://archive.ntp.org/ntp4/ntp-4.2.8p6.tar.gz
+>wget 
 
 >tar zxvf ntp-4.2.8p6.tar.gz 
 
 >cd ntp-4.2.8p6
 
->./configure
+>./configure --enable-linuxcaps
 
 >make
 
@@ -92,10 +92,26 @@ Check last version from http://www.ntp.org/downloads.html
 
 >service ntp stop
 
->/usr/local/bin/ntp* /usr/bin/ && sudo cp /usr/local/sbin/ntp* /usr/sbin/
+>cp /usr/local/bin/ntp* /usr/bin/ && cp /usr/local/sbin/ntp* /usr/sbin/
+
+Edit the configuration file:
 
 >nano /etc/ntp.conf 
 
+at the end of the file include this lines:
+
+># GPS Serial data reference
+>server 127.127.28.0
+>fudge 127.127.28.0 time1 0.9999 refid GPS
+
+># GPS Serial data reference
+>server 127.127.28.0
+>fudge 127.127.28.0 time1 0.200 refid GPS
+
+
+Close and restart
+
+>service ntp start
 
 # Setup cronostamper specific
 
@@ -118,12 +134,20 @@ Donwload FLASK for the embebeded web server
 
 Get latest version
 
->mkdir SDKs
-
 Get zmq lastest. If not CONFLATE does not work
+
 >mkdir zmq
 >chmod zmq
 >wget http://download.zeromq.org/zeromq-3.2.5.tar.gz
+>tar zvzf zeromq-3.2.5.tar.gz
+>cd zeromq-3.2.5
+>./configure
+>./make
+>./make install
+
+Install the python bindings
+
+>pip install pyzmq
 
 Get cronoStamper software (this)
 >git clone https://github.com/nachoplus/cronoStamper.git

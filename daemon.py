@@ -25,12 +25,13 @@ pi=pigpio.pi()
 #get the PLL system clock correction in PPM
 def getSystemClockData():
 	global ppm,pllOffset
-	rst=commands.getoutput('ntpdc -c kerninfo')
+	rst=commands.getoutput('ntpq -c kern')
 	out=rst.split()
-        ppm=float(out[6])
+        ppm=float(out[5])
 	pllOffset=float(out[2])
-        maxError=float(out[10])
-	Error=float(out[14])
+        maxError=float(out[8])
+	Error=float(out[11])
+
 
 
 #get data to correlate system time with the CPU ticks
