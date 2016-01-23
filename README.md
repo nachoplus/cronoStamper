@@ -4,20 +4,38 @@ __CronoStamper__
 Introduction
 ------------
 
-High precisión timestamping.
+High precisión timestamping using raspberry GPIO.
+
+It is based on pigpiod great daemon (http://abyz.co.uk/rpi/pigpio/index.html)
+
+(https://raw.githubusercontent.com/nachoplus/cronoStamper/master/test/cronoStamper.png)
 
 Nacho Mas - January 2016
 
-__Installing__
+__Installing from SD image__
 ----------
 
+Just burn your SD card with the provided image using raspberry standard way.
+
+boot the raspberry. It will get the IP from DHCP, log as root (defaul passwd: 'albaricoque', change it soon) and run the following commands:
+
+>raspi-config
+
+> ---> Expand Filesystem  -> //Do it
+
+Then edit your /etc/network/interface to set the IP address and /home/cronos/cronostamper/config.py to customize the variables
+
+cronostamper soft run under the user 'cronos' (passwd:albaricoque, change it soon)
+
+__Installing from scrach__
+----------
 
 First get minibian from https://minibianpi.wordpress.com/download/
 and make and SD as raspberry usual
 
-boot the raspberry log as root and run the following commands:
+boot the raspberry log as root (defaul passwd: 'raspberry', change it soon) and run the following commands:
 
-#Basic packages
+###Basic packages
 >apt-get update
 
 >apt-get dist-upgrade
@@ -34,7 +52,7 @@ boot the raspberry log as root and run the following commands:
 
 >reboot
 
-#Setup high precisón GPS-PPS disciplined clock
+###Setup high precisón GPS-PPS disciplined clock
 More information on: http://www.satsignal.eu/ntp/Raspberry-Pi-quickstart.html
 
 disable serial console:
@@ -101,11 +119,15 @@ Edit the configuration file:
 at the end of the file include this lines:
 
 ># GPS Serial data reference
+
 >server 127.127.28.0
+
 >fudge 127.127.28.0 time1 0.9999 refid GPS
 
 ># GPS Serial data reference
+
 >server 127.127.28.0
+
 >fudge 127.127.28.0 time1 0.200 refid GPS
 
 
@@ -113,7 +135,7 @@ Close and restart
 
 >service ntp start
 
-# Setup cronostamper specific
+### Setup cronostamper specific
 
 Get the pigpiod daemon http://abyz.co.uk/rpi/pigpio/index.html and compile
 
@@ -127,6 +149,13 @@ Get the pigpiod daemon http://abyz.co.uk/rpi/pigpio/index.html and compile
 
 >sudo make install
 
+Start on boot
+
+>nano /etc/rc.local 
+
+at the end of the file include this lines:
+
+>pigpiod
 
 Donwload FLASK for the embebeded web server
 
@@ -134,20 +163,29 @@ Donwload FLASK for the embebeded web server
 
 Get latest version
 
-Get zmq lastest. If not CONFLATE does not work
+Get zmq lastest. CONFLATE does not work on stock version
 
->mkdir zmq
->chmod zmq
->wget http://download.zeromq.org/zeromq-3.2.5.tar.gz
->tar zvzf zeromq-3.2.5.tar.gz
->cd zeromq-3.2.5
->./configure
+>wget http://download.zeromq.org/zeromq-4.1.4.tar.gz
+
+>tar xvzf zeromq-4.1.4.tar.gz
+
+>cd zeromq-4.1.4
+
+>./configure --without-libsodium
+
 >./make
+
 >./make install
 
 Install the python bindings
 
 >pip install pyzmq
 
+
+
+
+
+
 Get cronoStamper software (this)
+
 >git clone https://github.com/nachoplus/cronoStamper.git
