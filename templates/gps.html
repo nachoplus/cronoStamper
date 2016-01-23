@@ -1,0 +1,117 @@
+<HTML>
+<HEAD>
+<TITLE>CronoStamper Main Page</TITLE>
+ 
+<link rel="stylesheet" href= "{{ url_for('static',filename='style.css') }}" type="text/css"/>	
+<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='jquery.jqplot.css') }}" />
+<script type="text/javascript"
+    src="{{ url_for('static',filename='jquery-2.2.0.min.js') }}">
+</script>
+<script language="javascript" type="text/javascript"
+    src="{{ url_for('static',filename='jquery.jqplot.js') }}">
+</script>
+<script>
+
+  // Our ajax data renderer which here retrieves a text file.
+  // it could contact any source and pull data, however.
+  // The options argument isn't used in this renderer
+
+var ajaxDataRenderer = function(url, plot, options) {
+    var ret = null;
+    $.ajax({
+      // have to use synchronous here, else the function 
+      // will return before the data is fetched
+      async: false,
+      url: url,
+      dataType:"json",
+      success: function(data) {
+	ret=[1,data.pulse];
+	$('#lastvalue').text(ret);
+
+      }
+    });
+    return ret;
+};
+
+
+   var t = 2000;
+   var x = (new Date()).getTime(); // current time
+   var n = 20;
+   data = [];
+   for(i=0; i<n; i++){  
+      data.push([x - (n-1-i)*t,0]);  
+   }  
+
+var test = function() {
+    if(data.length > n-1){
+         data.shift();
+      }
+     var y = Math.random();
+     var x = (new Date()).getTime();
+     data.push([x,y]);
+     return data;
+};
+
+   var options = {      
+      axes: {   	    
+         xaxis: {   	   	   
+            numberTicks: 4,            
+            renderer:$.jqplot.DateAxisRenderer,           
+            tickOptions:{formatString:'%H:%M:%S'},            
+            min : data[0][0],           
+            max: data[data.length-1][0] 	   
+         }, 	    
+         yaxis: {
+            min:0, 
+            max: 1,
+            numberTicks: 6,   	        
+            tickOptions:{formatString:'%.1f'}  	    
+         }      
+      },      
+      seriesDefaults: {   	    
+         rendererOptions: { smooth: true}      
+      }  
+   };
+
+function updater() {
+ 
+  // The url for our json data
+  var jsonurl = "/gps.json";
+ 
+  // passing in the url string as the jqPlot data argument is a handy
+  // shortcut for our renderer.  You could also have used the
+  // "dataRendererOptions" option to pass in the url.
+  var plot2 = $.jqplot('chartdiv', jsonurl,{
+    title: "AJAX JSON Data Renderer",
+    dataRenderer: test,
+    dataRendererOptions: {
+      unusedOptionalUrl: jsonurl
+    }
+  });
+  };
+
+
+$(document).ready(function(){
+
+});
+
+$(document).ready(
+            function() {
+                setInterval(updater, 1000);
+            });
+</script>
+ 
+</HEAD>
+<BODY>
+    <br>
+    <br>
+<div id="chartdiv" style="height:400px;width:300px; "></div>
+<div id="lastvalue"></div>
+    <div align="center">
+        <p>
+            cronoStamper by N+
+        </p>
+    </div>
+
+</BODY>
+</HTML>

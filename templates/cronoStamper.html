@@ -1,0 +1,294 @@
+<HTML>
+<HEAD>
+<TITLE>CronoStamper Main Page</TITLE>
+ 
+
+
+<script type="text/javascript" src= "{{ url_for('static',filename='jquery-2.2.0.min.js') }}"></script>
+<link rel="stylesheet" href= "{{ url_for('static',filename='style.css') }}" type="text/css"/>	
+<script type="text/javascript" src="http://cdn.jsdelivr.net/jqplot/1.0.8/jquery.jqplot.min.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/jqplot/1.0.8/plugins/jqplot.dateAxisRenderer.min.js"></script>
+<link href="http://cdn.jsdelivr.net/jqplot/1.0.8/jquery.jqplot.min.css" rel="stylesheet" type="text/css" />
+<script>
+var plot1;
+var plot2;
+var options;
+var t = 1000;
+var x = (new Date()).getTime(); // current time
+var n = 60;
+
+data_pllOffset = []
+data_ClkError = []
+
+function updateShutter() {
+ $.ajax({
+    // the URL for the request
+    url: "/shutter.json",
+ 
+    // the data to send (will be converted to a query string)
+    data: {
+
+    },
+	 
+    // whether this is a POST or GET request
+    type: "GET",
+ 
+    // the type of data we expect back
+    dataType : "json",
+ 
+    // code to run if the request succeeds;
+    // the response is passed to the function
+    success: function( data ) {	
+	$('#DATE').text(data.dateUTC);
+	$('#UNIXTIME').text(data.unixUTC);
+	$('#MJD').text(data.MJD);
+    },
+ 
+    // code to run if the request fails; the raw request and
+    // status codes are passed to the function
+    error: function( xhr, status ) {
+        //alert( "Sorry, there was a problem!" );
+    },
+ 
+    // code to run regardless of success or failure
+    complete: function( xhr, status ) {
+ 
+    }
+    });
+
+    };
+
+function updateGPS() {
+ $.ajax({
+    // the URL for the request
+    url: "/gps.json",
+ 
+    // the data to send (will be converted to a query string)
+    data: {
+
+    },
+	 
+    // whether this is a POST or GET request
+    type: "GET",
+ 
+    // the type of data we expect back
+    dataType : "json",
+ 
+    // code to run if the request succeeds;
+    // the response is passed to the function
+    success: function( data ) {	
+	$('#MODE').text(data.mode);
+	$('#NSATS').text(data.nsat);
+	$('#LATITUD').text(data.lat);
+	$('#LONGITUD').text(data.lon);
+	$('#ALTITUDE').text(data.alt);
+	$('#EPX').text(data.epx);
+	$('#EPY').text(data.epy);
+	$('#EPV').text(data.epv);
+	$('#EPT').text(data.ept);
+	$('#PLLOFFSET').text(data.pllOffset);
+	$('#PPM').text(data.ppm);
+	$('#CLKERROR').text(data.ClkError);
+	$('#CLKMAXERROR').text(data.ClkMaxError);
+
+      if(data_pllOffset.length > n-1){
+         data_pllOffset.shift();
+      }
+      if(data_ClkError.length > n-1){
+         data_ClkError.shift();
+      }
+      var x = (new Date()).getTime();
+
+      var y = Number(data.pllOffset)*1000000;
+      data_pllOffset.push([x,y]);
+      if (plot1) {
+    	plot1.destroy();
+      }
+      options.title='CLOCK: UTC offset (ns)'
+      plot1.series[0].data = data_pllOffset; 
+      options.axes.xaxis.min = data_pllOffset[0][0];
+      options.axes.xaxis.max = data_pllOffset[data_pllOffset.length-1][0];
+      var yy =  data_pllOffset.map(function(value,index) { return value[1]; });
+      var ymin=Math.min.apply(null,yy);
+      var ymax=Math.max.apply(null,yy);
+      margen=(ymax-ymin)/10.;
+      media=(ymax+ymin)/2;
+      options.axes.yaxis.min = ymin-margen;
+      options.axes.yaxis.max = ymax+margen;
+
+      plot1 = $.jqplot ('pllOffset', [data_pllOffset],options);
+
+      var y = Number(data.epx);
+      if (isNaN(y)) {
+		y=data_ClkError[data_ClkError.length-2][1];
+      }
+      data_ClkError.push([x,y]);
+      if (plot2) {
+    	plot2.destroy();
+      }
+      options.title='GPS: EPX X Error (m) 95% Confidence'
+      plot2.series[0].data = data_ClkError; 
+      options.axes.xaxis.min = data_ClkError[0][0];
+      options.axes.xaxis.max = data_ClkError[data_ClkError.length-1][0];
+      var yy =  data_ClkError.map(function(value,index) { return value[1]; });
+      var ymin=Math.min.apply(null,yy);
+      var ymax=Math.max.apply(null,yy);
+      margen=(ymax-ymin)/10.;
+      media=(ymax+ymin)/2;
+      options.axes.yaxis.min = ymin-margen;
+      options.axes.yaxis.max = ymax+margen;
+
+      plot2 = $.jqplot ('ClkError', [data_ClkError],options);
+
+
+      primera=0;
+
+    },
+ 
+    // code to run if the request fails; the raw request and
+    // status codes are passed to the function
+    error: function( xhr, status ) {
+        //alert( "Sorry, there was a problem!" );
+    },
+ 
+    // code to run regardless of success or failure
+    complete: function( xhr, status ) {
+ 
+    }
+    });
+
+    };
+
+function updater() {
+			updateShutter();
+			updateGPS();
+                   };
+
+$(document).ready(function() {
+  
+
+   for(i=0; i<n; i++){  
+      data_pllOffset.push([x - (n-1-i)*t,0]);  
+      data_ClkError.push([x - (n-1-i)*t,0]);  
+   }   
+   options = {      
+      title: 'UTC offset (ns)',
+      axes: {   	    
+         xaxis: {   	   	   
+            numberTicks: 4,            
+            renderer:$.jqplot.DateAxisRenderer,           
+            tickOptions:{formatString:'%H:%M:%S'},            
+            min : data_pllOffset[0][0],           
+            max: data_pllOffset[data_pllOffset.length-1][0] 	   
+         }, 	    
+         yaxis: {
+            min:0, 
+            max: 1,
+            numberTicks: 6,   	        
+            tickOptions:{formatString:'%.1f'}  	    
+         }      
+      },      
+      seriesDefaults: {   	    
+         rendererOptions: { smooth: true}      
+      }  
+   };  
+ 
+   plot1 = $.jqplot ('pllOffset', [data_pllOffset],options); 
+   plot2 = $.jqplot ('ClkError', [data_ClkError],options); 
+
+   setInterval(updater, 1000);
+});
+</script>
+ 
+</HEAD>
+<BODY>
+    <div align="center">
+        <p>
+            cronoStamper by N+
+        </p>
+    </div>
+<table align='center' class='ShutterTime'>
+<tr><td colspan="2">
+LAST SHUTTER TIME
+</td>
+<tr><td >DATE</td><td>
+    <div id="DATE" align="left"></div>
+</td></tr>
+<tr><td>UNIX TIME</td><td>
+    <div id="UNIXTIME" align="left"></div>
+</td></tr>
+<tr><td>MJD</td><td>
+    <div id="MJD" align="left"></div>
+</td></tr>
+</table>
+
+</table>
+<table class='graphs'>
+<tr>
+<td>
+<div id="pllOffset" style="height:300px; width:500px;"></div>
+</td>
+<td>
+<div id="ClkError" style="height:300px; width:500px;"></div>
+</td>
+</tr>
+</table>
+
+<table align='center' class='ShutterTime'>
+<tr><td colspan="2">
+UTC CLOCK VALUES
+</td>
+<tr><td >Clock offset from UTC (Estimated)</td><td>
+    <div id="PLLOFFSET" align="left"></div>
+</td></tr>
+<tr><td >Frequency Correction (ppm==microsecond/s)</td><td>
+    <div id="PPM" align="left"></div>
+</td></tr>
+<tr><td>Clock Estimated Error (seconds)</td><td>
+    <div id="CLKERROR" align="left"></div>
+</td></tr>
+<tr><td>Clock Max Error (seconds)</td><td>
+    <div id="CLKMAXERROR" align="left"></div>
+</td></tr>
+
+
+
+<table align='center' class='ShutterTime'>
+<tr><td colspan="2">
+GPS VALUES
+</td>
+<tr><td>MODE (0=INIT, 1=NO FIX, 2= 2D FIX, 3 = 3D FIX) must be 3D</td><td>
+    <div id="MODE" align="left"></div>
+</td></tr>
+<tr><td>Satellites (Used/Total)</td><td>
+    <div id="NSATS" align="left"></div>
+</td></tr>
+<tr><td>LATITUD</td><td>
+    <div id="LATITUD" align="left"></div>
+</td></tr>
+<tr><td>LONGITUD</td><td>
+    <div id="LONGITUD" align="left"></div>
+</td></tr>
+<tr><td>ALTITUDE</td><td>
+    <div id="ALTITUDE" align="left"></div>
+</td></tr>
+<tr><td >X Error (m) 95% Confidence</td><td>
+    <div id="EPX" align="left"></div>
+</td></tr>
+<tr><td >Y Error (m) 95% Confidence</td><td>
+    <div id="EPY" align="left"></div>
+</td></tr>
+<tr><td >Vertical Error (m) 95% Confidence</td><td>
+    <div id="EPV" align="left"></div>
+</td></tr>
+<tr><td >Time Error (microseconds) 95% Confidence</td><td>
+    <div id="EPT" align="left"></div>
+</td></tr>
+</table>
+
+
+
+
+
+</BODY>
+</HTML>

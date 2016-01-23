@@ -1,0 +1,112 @@
+<!--[if lt IE 9]><script type="text/javascript" src="http://cdn.jsdelivr.net/excanvas/r3/excanvas.js"></script><![endif]-->
+<script type="text/javascript" src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/jqplot/1.0.8/jquery.jqplot.min.js"></script>
+<script type="text/javascript" src="http://cdn.jsdelivr.net/jqplot/1.0.8/plugins/jqplot.dateAxisRenderer.min.js"></script>	
+<link href="http://cdn.jsdelivr.net/jqplot/1.0.8/jquery.jqplot.min.css" rel="stylesheet" type="text/css" /><script type="text/javascript">
+$(document).ready(function(){	
+   var t = 1000;
+   var x = (new Date()).getTime(); // current time
+   var n = 60;
+   data = [];
+   for(i=0; i<n; i++){  
+      data.push([x - (n-1-i)*t,0]);  
+   }   
+   var options = {      
+      title: 'UTC offset (ns)',
+      axes: {   	    
+         xaxis: {   	   	   
+            numberTicks: 4,            
+            renderer:$.jqplot.DateAxisRenderer,           
+            tickOptions:{formatString:'%H:%M:%S'},            
+            min : data[0][0],           
+            max: data[data.length-1][0] 	   
+         }, 	    
+         yaxis: {
+            min:0, 
+            max: 1,
+            numberTicks: 6,   	        
+            tickOptions:{formatString:'%.1f'}  	    
+         }      
+      },      
+      seriesDefaults: {   	    
+         rendererOptions: { smooth: true}      
+      }  
+   };  
+ 
+   var plot1 = $.jqplot ('myChart', [data],options); 
+ 
+   $('button').click( function(){        
+      doUpdate();      
+      $(this).hide();  
+   });
+ 
+   function doUpdate() {      
+      if(data.length > n-1){
+         data.shift();
+      }
+
+
+
+ $.ajax({
+    // the URL for the request
+    url: "/gps.json",
+ 
+    // the data to send (will be converted to a query string)
+    data: {
+
+    },
+	 
+    // whether this is a POST or GET request
+    type: "GET",
+ 
+    // the type of data we expect back
+    dataType : "json",
+ 
+    // code to run if the request succeeds;
+    // the response is passed to the function
+    success: function( dataJ ) {	
+      var y = Number(dataJ.pllOffset)*1000000;
+      //var y = Math.random();
+       $('#t').text(y)
+      var x = (new Date()).getTime();
+      data.push([x,y]);
+      if (plot1) {
+    	plot1.destroy();
+      }
+      plot1.series[0].data = data; 
+      options.axes.xaxis.min = data[0][0];
+      options.axes.xaxis.max = data[data.length-1][0];
+      var yy = data.map(function(value,index) { return value[1]; });
+      var ymin=Math.min.apply(null,yy);
+      var ymax=Math.max.apply(null,yy);
+      margen=(ymax-ymin)/10.;
+      media=(ymax+ymin)/2;
+      options.axes.yaxis.min = ymin-margen;
+      options.axes.yaxis.max = ymax+margen;
+      $('#tt').text(Math.max(yy))
+      plot1 = $.jqplot ('myChart', [data],options);
+    },
+ 
+    // code to run if the request fails; the raw request and
+    // status codes are passed to the function
+    error: function( xhr, status ) {
+        //alert( "Sorry, there was a problem!" );
+    },
+ 
+    // code to run regardless of success or failure
+    complete: function( xhr, status ) {
+ 
+    }
+    });
+
+
+      setTimeout(doUpdate, t);
+   }
+});
+</script>
+<div id="myChart" style="height:300px; width:500px;"></div>
+<button>Start Updates</button>
+<div id='t'>hhhh</div>
+<div id='tt'>hhhh</div>
+</BODY>
+</HTML>
