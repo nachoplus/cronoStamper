@@ -86,8 +86,8 @@ def GPIOshutter(gpio, level, tick):
 		else:
 			print "LOW: ",
 		print msg
-		print unixTime2date(ticks2UTC(tick))
-		print "%.12f" % unixTime2MJD(ticks2UTC(tick))
+		print unixTime2date(unixUTC)
+		print "%.12f" % unixTime2MJD(unixUTC)
 
 
 

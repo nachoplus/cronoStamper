@@ -32,7 +32,8 @@ class gps2zmq:
 			clk=self.getSystemClockData()
 			fix=dict(report)
 	     		fix.update(clk)
-
+			#print fix
+			'''
 			while report['class'] != 'SKY':
  		        	report = self.session.next()
 			if 'satellites' in report:
@@ -45,8 +46,9 @@ class gps2zmq:
 				nsat={'nsat':str(uses)+'/'+str(len(sats)),'satellites':sats}
 				fix.update(nsat)
 				self.datakeys=fix.keys()
-			#print self.datakeys
+			'''
 			socket.send(mogrify('GPS',fix))
+
 	except StopIteration:
 	    msg={}	
             for key in self.datakeys:

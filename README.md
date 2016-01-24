@@ -122,13 +122,13 @@ at the end of the file include this lines:
 
 >server 127.127.28.0
 
->fudge 127.127.28.0 time1 0.9999 refid GPS
+>fudge 127.127.28.0 
 
 ># GPS Serial data reference
 
->server 127.127.28.0
+>server 127.127.28.0 minpoll 4 maxpoll 4 prefer
 
->fudge 127.127.28.0 time1 0.200 refid GPS
+>fudge 127.127.28.0 time1 0.140 refid GPS
 
 
 Close and restart
