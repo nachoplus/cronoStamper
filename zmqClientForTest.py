@@ -6,14 +6,14 @@ import zmq
 import time
 import json
 
-from ../config import *
+from config import *
 
     
 # Socket to talk to server
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 #socket.setsockopt(zmq.CONFLATE, 1)
-socket.connect ("tcp://192.168.1.36:%s" % zmqPort)
+socket.connect ("tcp://cronostamper:%s" % zmqPort)
 topicfilter = "SHUTTER_HIGH"
 socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
