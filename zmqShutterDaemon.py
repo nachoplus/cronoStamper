@@ -23,23 +23,12 @@ pi=pigpio.pi()
 
 
 #get the PLL system clock correction in PPM
-def getSystemClockData():
+def getPPM():
 	global ppm,pllOffset
-	rst=commands.getoutput('ntpq -c kern')
-	out=rst.split('\n')[1:]
-	res={}
-	for line in out:
-		dummy=line.split(':')
-		if len(dummy)!=2:
-			continue
-		else:
-			key=dummy[0]
-			value=dummy[1]
-			res[key]=value
-        ppm=float(res['pll frequency'])
-	pllOffset=float(res['pll offset'])
-        maxError=float(res['maximum error'])
-	Error=float(res['estimated error'])
+	clkData=getSystemClockData()
+       	ppm=float(clkData['ppm'])
+	pllOffset=float(clkData['pllOffset'])
+
 
 
 
@@ -48,7 +37,7 @@ def getSystemClockData():
 def discipline(gpio, level, tick):
 	global RTCsecond,RTCtick
 	now=time.time()
-	getSystemClockData()
+	getPPM()
 	RTCsecond=int(round(now))
 	RTCtick=tick
 	#print (now,RTCsecond,ppm,pllOffset,RTCtick)

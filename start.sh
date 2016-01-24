@@ -1,8 +1,9 @@
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo "Killing..."
-./stop.sh
+$DIR/stop.sh
 echo "Starting..."
 sleep 1
-nohup ./zmqShutterDaemon.py >/dev/null &
-nohup ./zmqGPSDaemon.py >/dev/null &
-nohup ./zmqSocketServer.py >/dev/null &
-nohup ./zmqHttpServer.py >/dev/null &
+nohup $DIR/zmqShutterDaemon.py >/dev/null &
+nohup $DIR/zmqGPSDaemon.py >/dev/null &
+nohup $DIR/zmqSocketServer.py >/dev/null &
+nohup $DIR/zmqHttpServer.py >/dev/null &

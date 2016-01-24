@@ -70,14 +70,14 @@ if __name__ == '__main__':
 	context = zmq.Context()
 	topicfilter = "SHUTTER_HIGH"
 	socket = context.socket(zmq.SUB)
-	#only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
 	socket.setsockopt(zmq.CONFLATE, 1)
 	socket.connect ("tcp://localhost:%s" % zmqPort)
 	socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 	topicfilter = "GPS"
 	socketGPS = context.socket(zmq.SUB)
-	#only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
 	socketGPS.setsockopt(zmq.CONFLATE, 1)
 	socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
 	socketGPS.setsockopt(zmq.SUBSCRIBE, topicfilter)

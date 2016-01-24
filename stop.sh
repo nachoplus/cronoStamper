@@ -1,4 +1,5 @@
 killall -9 zmqShutterDaemon.py
-killall -9 zmqHttpServer.py
 killall -9 zmqGPSDaemon.py
-killall -9 zmqSocketServer.py
+kill -9 `ps -ef | grep zmqHttpServer.py | grep -v grep | awk '{print $2}'`
+kill -9 `ps -ef | grep zmqSocketServer.py | grep -v grep | awk '{print $2}'`
+

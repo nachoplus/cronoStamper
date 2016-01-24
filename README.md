@@ -118,13 +118,13 @@ Edit the configuration file:
 
 at the end of the file include this lines:
 
-># GPS Serial data reference
+>\# GPS Serial data reference
 
 >server 127.127.28.0
 
 >fudge 127.127.28.0 
 
-># GPS Serial data reference
+>\# GPS Serial data reference
 
 >server 127.127.28.0 minpoll 4 maxpoll 4 prefer
 
@@ -184,6 +184,12 @@ Now add a new user to run cronostamper daemons under:
 Log in that user and get cronoStamper software (this)
 
 >git clone https://github.com/nachoplus/cronoStamper.git
+
+### To run test and check
+
+>apt-get install wiringpi
+>apt-get install gnuplot
+
 
 ### Start on boot
 

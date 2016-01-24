@@ -9,7 +9,6 @@ import threading
 import time
 import datetime
 import zmq
-import commands
 import json
 
 from config import *
@@ -29,7 +28,7 @@ class gps2zmq:
 	        report = self.session.next()
 	        if report['class'] == 'TPV':
 		        # Do more stuff
-			clk=self.getSystemClockData()
+			clk=getSystemClockData()
 			fix=dict(report)
 	     		fix.update(clk)
 			#print fix
@@ -45,8 +44,9 @@ class gps2zmq:
 						uses=uses+1
 				nsat={'nsat':str(uses)+'/'+str(len(sats)),'satellites':sats}
 				fix.update(nsat)
-				self.datakeys=fix.keys()
+				
 			'''
+			self.datakeys=fix.keys()
 			socket.send(mogrify('GPS',fix))
 
 	except StopIteration:
@@ -57,27 +57,6 @@ class gps2zmq:
 	    print "GPSD has terminated"
 	
 
-
-     def getSystemClockData(self):
-	rst=commands.getoutput('ntpq -c kern')
-	out=rst.split('\n')[1:]
-	res={}
-	for line in out:
-		dummy=line.split(':')
-		if len(dummy)!=2:
-			continue
-		else:
-			key=dummy[0]
-			value=dummy[1]
-			res[key]=value
-
-	ppm=float(res['pll frequency'])
-	pllOffset=float(res['pll offset'])
-	maxError=float(res['maximum error'])
-	Error=float(res['estimated error'])
-
-	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error}
-	return msg
 
  
 if __name__ == '__main__':
