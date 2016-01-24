@@ -33,9 +33,9 @@ def getSystemClockData():
 	else:
         	ppm=0
 		pllOffset=0
-        	maxError=16
-		Error=16
-		status="NTPD fail"
+        	maxError="NOT SYNCRONIZED"
+		Error="NOT SYNCRONIZED"
+		status="NOT SYNCRONIZED"
 		print "Warning: NTPD fail"
 
 	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error,'status':status}

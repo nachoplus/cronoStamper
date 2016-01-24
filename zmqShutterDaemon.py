@@ -12,9 +12,8 @@ from config import *
 
 RTCsecond=0
 RTCtick=0
-ppm=0
-pllOffset=0
 
+ppm=0
 lastHIGH=0
 lastLOW=0
 
@@ -24,18 +23,16 @@ pi=pigpio.pi()
 
 #get the PLL system clock correction in PPM
 def getPPM():
-	global ppm,pllOffset
+	global ppm
 	clkData=getSystemClockData()
        	ppm=float(clkData['ppm'])
-	pllOffset=float(clkData['pllOffset'])
-
 
 
 
 #get data to correlate system time with the CPU ticks
 #use PPS signal interrupt to get tick:UTCtime point
 def discipline(gpio, level, tick):
-	global RTCsecond,RTCtick
+	global RTCsecond,RTCtick,ppm
 	now=time.time()
 	getPPM()
 	RTCsecond=int(round(now))
@@ -45,7 +42,7 @@ def discipline(gpio, level, tick):
 
 #corrected RTCsecond,RTCtick and ppm 
 def ticks2unixUTC(tick):
-	global RTCsecond,RTCtick,ppm,pllOffset
+	global RTCsecond,RTCtick,ppm
 	tickOffset=pigpio.tickDiff(RTCtick, tick)
 	bias=ppm*(tickOffset/1000000.)
 	UTC=float(RTCsecond)+(tickOffset+bias)/1000000.
