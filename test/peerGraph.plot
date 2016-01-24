@@ -7,7 +7,8 @@
 #    filegen clockstats file clockstats type day enable
 
 # Resolution: fullscreen
-set term png size `xrandr | awk '/\*/{sub(/x/,",");print $1; exit}'`
+#set term png size `xrandr | awk '/\*/{sub(/x/,",");print $1; exit}'`
+set term png size 1500,1000
 set grid
 set bars 0.4
 set y2tics
