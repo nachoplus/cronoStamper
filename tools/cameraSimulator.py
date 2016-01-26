@@ -1,6 +1,8 @@
 #!/usr/bin/python
 '''
-    Simple socket server using threads
+    Simple CCD tregger simulator. Open a socket and execute
+    ./oneShot when someone get connected and exit.
+    Nacho Mas January 2016
 '''
 
 import socket

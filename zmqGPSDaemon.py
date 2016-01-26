@@ -18,7 +18,7 @@ from config import *
 
 class gps2zmq:
      def __init__(self):
-	flags= gps.WATCH_ENABLE | gps.WATCH_NEWSTYLE 
+	flags= gps.WATCH_ENABLE | gps.WATCH_PPS 
 	self.session = gps.gps(mode=flags)	
 	self.datakeys=()
      def run(self):

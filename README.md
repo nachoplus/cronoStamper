@@ -23,9 +23,12 @@ boot the raspberry. It will get the IP from DHCP, log as root (defaul passwd: 'a
 
 > ---> Expand Filesystem  -> //Do it
 
+
 Then edit your /etc/network/interface to set the IP address and /home/cronos/cronostamper/config.py to customize the variables
 
 cronostamper soft run under the user 'cronos' (passwd:albaricoque, change it soon)
+
+Reboot again
 
 __Installing from scrach__
 ----------

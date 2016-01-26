@@ -12,7 +12,7 @@ from config import *
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 #socket.setsockopt(zmq.CONFLATE, 1)
-socket.connect ("tcp://localhost:%s" % zmqPort)
+socket.connect ("tcp://localhost:%s" % zmqGPSPort)
 topicfilter = ""
 socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 

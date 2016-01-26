@@ -52,7 +52,7 @@ def clientthread(conn):
 	        #data = conn.recv(1024)
 		m= socket.recv()
 		topic, msg  = demogrify(m)
-		reply = ':'+msg['dateUTC']+'#\n'
+		reply = msg['dateUTC']+'\n'
     		conn.sendall(reply)
      
     #came out of loop
