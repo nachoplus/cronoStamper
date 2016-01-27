@@ -16,23 +16,27 @@ var plot_gps;
 var options;
 var t = 1000;
 var x = (new Date()).getTime(); // current time
-var n = 100;
+var n = 60;
 
 var primera=true;
 data_pllOffset = []
 data_ClkError = []
 data_gps = []
 
-function median(values) {
-
-    values.sort( function(a,b) {return a - b;} );
-
-    var half = Math.floor(values.length/2);
-
-    if(values.length % 2)
-        return values[half];
-    else
-        return (values[half-1] + values[half]) / 2.0;
+function renorm(darray) {
+var x0=0;
+var y0=0;
+var e=0;
+for(var i = 0; i < darray.length; i ++)
+{
+  x0 = x0 + darray[i][0];
+  y0 = y0 + darray[i][1];  
+  e=e+1;
+}
+x0=x0/e;
+y0=y0/e;
+var newdarray =  darray.map(function(value,index) { return [value[0]-x0,value[1]-y0]; });
+return newdarray;    
 }
 
 function updateShutter() {
@@ -112,15 +116,23 @@ function updateGPS() {
 
 	if (primera==true) {
 	   for(i=0; i<n; i++){  
-	      data_pllOffset.push([x - (n-1-i)*t,data.ClkError]);  
-	      data_ClkError.push([x - (n-1-i)*t,data.pllOffset]);  
-      		var kx = Number(data.lat)*Math.PI/180.*R;
-      		var ky = Number(data.lon)*Math.PI/180.*R*Math.cos(Number(data.lat)*Math.PI/180.);
-      		data_gps.push([ky,kx]); 
+	      	if(data_pllOffset.length > n-1){
+	        	data_pllOffset.shift();
+	      	}
+	      	if(data_ClkError.length > n-1){
+		         data_ClkError.shift();
+	      	}
+	      	if(data_gps.length > n-1){
+		         data_gps.shift();
+	      	}
+	      	data_pllOffset.push([x - (n-1-i)*t,data.ClkError]);  
+	      	data_ClkError.push([x - (n-1-i)*t,data.pllOffset]);  
+	        var xinit = Number(data.lat)*Math.PI/180.*R;
+		var yinit = Number(data.lon)*Math.PI/180.*R*Math.cos(Number(data.lat)*Math.PI/180.);
+                data_gps.push([yinit,xinit]); 
 	   }   
         }
-
-
+      
 
       if(data_pllOffset.length > n-1){
          data_pllOffset.shift();
@@ -184,25 +196,27 @@ function updateGPS() {
       if (plot_gps) {
     	plot_gps.destroy();
       }
-      GPSoptions.title='GPS: polar lat/log'
-      plot_gps.series[0].data = data_gps; 
-      var xx =  data_gps.map(function(value,index) { return value[0]; });
+      var data_gps0=renorm(data_gps)
+      GPSoptions.title='GPS: horizontal error (m)'
+      plot_gps.series[0].data = data_gps0; 
+      var xx =  data_gps0.map(function(value,index) { return value[0]; });
       var xmin=Math.min.apply(null,xx);
       var xmax=Math.max.apply(null,xx);
       margen=(xmax-xmin)/10.;
       if (margen==0) {
 		margen=margen/10;
       }	
-      lat_media=(xmax+xmin)/2;
 
-      var yy =  data_gps.map(function(value,index) { return value[1]; });
+
+      var yy =  data_gps0.map(function(value,index) { return value[1]; });
       var ymin=Math.min.apply(null,yy);
       var ymax=Math.max.apply(null,yy);
       margen=(ymax-ymin)/10.;
       if (margen==0) {
 		margen=ymax/10;
       }	
-      lon_media=(ymax+ymin)/2;
+      //lon_media=median(xx);
+      //lat_media=median(yy);
 
       GPSoptions.axes.xaxis.min = xmin-margen;
       GPSoptions.axes.xaxis.max = xmax+margen;
@@ -210,8 +224,17 @@ function updateGPS() {
       GPSoptions.axes.yaxis.min = ymin-margen;
       GPSoptions.axes.yaxis.max = ymax+margen;
 
-      plot_gps = $.jqplot ('GPS', [data_gps],GPSoptions);
+      if (((ymax-ymin)<= 6) && ((xmax-xmin)<= 6) ) {
+	col='#00FF00';
+      } else if (((ymax-ymin)<= 12) && ((xmax-xmin)<= 12) ) {
+	col='#0000FF';
+      } else {
+	col='#FF0000';
+      }
 
+      GPSoptions.seriesDefaults.color=col;
+
+      plot_gps = $.jqplot ('GPS', [data_gps0],GPSoptions);
       primera=false;
 
     },
@@ -262,7 +285,7 @@ $(document).ready(function() {
          }      
       },      
       seriesDefaults: {   
-         markerOptions: { size: 1, style:"." },		    
+         markerOptions: { size: 3, style:"." },		    
          rendererOptions: { smooth: true}      
       }  
    };  
@@ -282,7 +305,8 @@ $(document).ready(function() {
     
          }      
       },      
-      seriesDefaults: {   
+      seriesDefaults: {  
+	 color:'#ff0000',
          showLine:false, 
          markerOptions: { size: 1, style:"+" }	    
       }  
