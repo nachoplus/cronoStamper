@@ -12,13 +12,28 @@
 <script>
 var plot1;
 var plot2;
+var plot_gps;
 var options;
 var t = 1000;
 var x = (new Date()).getTime(); // current time
-var n = 60;
+var n = 100;
 
+var primera=true;
 data_pllOffset = []
 data_ClkError = []
+data_gps = []
+
+function median(values) {
+
+    values.sort( function(a,b) {return a - b;} );
+
+    var half = Math.floor(values.length/2);
+
+    if(values.length % 2)
+        return values[half];
+    else
+        return (values[half-1] + values[half]) / 2.0;
+}
 
 function updateShutter() {
  $.ajax({
@@ -77,6 +92,7 @@ function updateGPS() {
     // code to run if the request succeeds;
     // the response is passed to the function
     success: function( data ) {	
+
 	$('#MODE').text(data.mode);
 	$('#NSATS').text(data.nsat);
 	$('#LATITUD').text(data.lat);
@@ -91,13 +107,31 @@ function updateGPS() {
 	$('#CLKERROR').text(data.ClkError);
 	$('#CLKMAXERROR').text(data.ClkMaxError);
 
+     var R=6371000;
+     var x = (new Date()).getTime();
+
+	if (primera==true) {
+	   for(i=0; i<n; i++){  
+	      data_pllOffset.push([x - (n-1-i)*t,data.ClkError]);  
+	      data_ClkError.push([x - (n-1-i)*t,data.pllOffset]);  
+      		var kx = Number(data.lat)*Math.PI/180.*R;
+      		var ky = Number(data.lon)*Math.PI/180.*R*Math.cos(Number(data.lat)*Math.PI/180.);
+      		data_gps.push([ky,kx]); 
+	   }   
+        }
+
+
+
       if(data_pllOffset.length > n-1){
          data_pllOffset.shift();
       }
       if(data_ClkError.length > n-1){
          data_ClkError.shift();
       }
-      var x = (new Date()).getTime();
+      if(data_gps.length > n-1){
+         data_gps.shift();
+      }
+
 
       var y = Number(data.ClkError)*1000000;
       data_pllOffset.push([x,y]);
@@ -144,7 +178,41 @@ function updateGPS() {
       plot2 = $.jqplot ('ClkError', [data_ClkError],options);
 
 
-      primera=0;
+      var x = Number(data.lat)*Math.PI/180.*R;
+      var y = Number(data.lon)*Math.PI/180.*R*Math.cos(Number(data.lat)*Math.PI/180.);
+      data_gps.push([y,x]);
+      if (plot_gps) {
+    	plot_gps.destroy();
+      }
+      GPSoptions.title='GPS: polar lat/log'
+      plot_gps.series[0].data = data_gps; 
+      var xx =  data_gps.map(function(value,index) { return value[0]; });
+      var xmin=Math.min.apply(null,xx);
+      var xmax=Math.max.apply(null,xx);
+      margen=(xmax-xmin)/10.;
+      if (margen==0) {
+		margen=margen/10;
+      }	
+      lat_media=(xmax+xmin)/2;
+
+      var yy =  data_gps.map(function(value,index) { return value[1]; });
+      var ymin=Math.min.apply(null,yy);
+      var ymax=Math.max.apply(null,yy);
+      margen=(ymax-ymin)/10.;
+      if (margen==0) {
+		margen=ymax/10;
+      }	
+      lon_media=(ymax+ymin)/2;
+
+      GPSoptions.axes.xaxis.min = xmin-margen;
+      GPSoptions.axes.xaxis.max = xmax+margen;
+
+      GPSoptions.axes.yaxis.min = ymin-margen;
+      GPSoptions.axes.yaxis.max = ymax+margen;
+
+      plot_gps = $.jqplot ('GPS', [data_gps],GPSoptions);
+
+      primera=false;
 
     },
  
@@ -168,12 +236,14 @@ function updater() {
                    };
 
 $(document).ready(function() {
-  
+      var x = (new Date()).getTime();
+	   for(i=0; i<n; i++){  
+	      data_pllOffset.push([x - (n-1-i)*t,0]);  
+	      data_ClkError.push([x - (n-1-i)*t,0]);  
+	      data_gps.push([null,null]); 
+	   }    
 
-   for(i=0; i<n; i++){  
-      data_pllOffset.push([x - (n-1-i)*t,0]);  
-      data_ClkError.push([x - (n-1-i)*t,0]);  
-   }   
+
    options = {      
       title: 'UTC offset (ms)',
       axes: {   	    
@@ -191,13 +261,36 @@ $(document).ready(function() {
             tickOptions:{formatString:'%.1f'}  	    
          }      
       },      
-      seriesDefaults: {   	    
+      seriesDefaults: {   
+         markerOptions: { size: 1, style:"." },		    
          rendererOptions: { smooth: true}      
       }  
    };  
+
+   GPSoptions = {      
+      title: 'GPS: polar lat/log',
+      axes: {   	    
+         xaxis: {   
+            min:30, 
+            max: 50,	   	   
+            numberTicks: 4           
+         }, 	    
+         yaxis: {
+            min:-3, 
+            max: -5,
+            numberTicks: 4,   	        
+    
+         }      
+      },      
+      seriesDefaults: {   
+         showLine:false, 
+         markerOptions: { size: 1, style:"+" }	    
+      }  
+   }; 
  
    plot1 = $.jqplot ('pllOffset', [data_pllOffset],options); 
-   plot2 = $.jqplot ('ClkError', [data_ClkError],options); 
+   plot2 = $.jqplot ('ClkError', [data_ClkError],options);    
+   plot_gps = $.jqplot ('GPS', [data_gps],GPSoptions); 
 
    setInterval(updater, 1000);
 });
@@ -230,6 +323,9 @@ LAST SHUTTER TIME
 <tr>
 <td>
 <div id="pllOffset" style="height:300px; width:500px;"></div>
+</td>
+<td>
+<div id="GPS" style="height:300px; width:500px;"></div>
 </td>
 <td>
 <div id="ClkError" style="height:300px; width:500px;"></div>

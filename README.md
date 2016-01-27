@@ -189,9 +189,9 @@ Log in that user and get cronoStamper software (this)
 >git clone https://github.com/nachoplus/cronoStamper.git
 
 ### To run test and check
+In order to run some test you need aditional stuff:
 
->apt-get install wiringpi
->apt-get install gnuplot
+>apt-get install wiringpi gnuplot
 
 
 ### Start on boot
