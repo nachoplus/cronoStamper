@@ -7,8 +7,8 @@ import time
 from config import *
 
 app = Flask(__name__)
-last=0
-lastGPS=0
+last={}
+lastGPS={}
 
 
 @app.route('/')
