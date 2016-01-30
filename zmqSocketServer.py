@@ -36,11 +36,11 @@ print 'Socket now listening'
 def clientthread(conn):
 
     context = zmq.Context()
-    topicfilter = "SHUTTER_HIGH"
+    topicfilter = ShutterFlange
     socket = context.socket(zmq.SUB)
     #only one message (do not work with the stock version of zmq, works from ver 4.1.4)
     socket.setsockopt(zmq.CONFLATE, 1)
-    socket.connect ("tcp://localhost:%s" % zmqPort)
+    socket.connect ("tcp://localhost:%s" % zmqShutterPort)
     socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
     #Sending message to connected client

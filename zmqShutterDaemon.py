@@ -53,8 +53,6 @@ def ticks2unixUTC(tick):
 def GPIOshutter(gpio, level, tick):
 	global lastHIGH,lastLOW
 	unixUTC=ticks2unixUTC(tick)
-	dateUTC=unixTime2date(unixUTC)
-	MJD=unixTime2MJD(unixUTC)
 	if level == 1:
 		topic="SHUTTER_HIGH"
 		lastHIGH=unixUTC
@@ -63,7 +61,12 @@ def GPIOshutter(gpio, level, tick):
 		topic="SHUTTER_LOW"
 		lastLOW=unixUTC
 		pulse=unixUTC-lastHIGH
-	msg = {'tick':tick,'level':level,'unixUTC':unixUTC,'dateUTC':dateUTC,'MJD':MJD,'pulse':pulse}
+
+	unixUTC_= lastHIGH
+	pulse=round(pulse,6)
+	dateUTC=unixTime2date(unixUTC_)
+	MJD=unixTime2MJD(unixUTC_)
+	msg = {'tick':tick,'level':level,'unixUTC':unixUTC_,'dateUTC':dateUTC,'MJD':MJD,'pulse':pulse}
 	socket.send(mogrify(topic,msg))
 
 	if debug:
@@ -87,7 +90,7 @@ def unixTime2MJD(unixtime):
 if __name__ == '__main__':
 	context = zmq.Context()
 	socket = context.socket(zmq.PUB)
-	socket.bind("tcp://*:%s" % zmqPort)
+	socket.bind("tcp://*:%s" % zmqShutterPort)
 	getSystemClockData()
 	cb1 = pi.callback(11, pigpio.EITHER_EDGE, GPIOshutter)
 	cb2 = pi.callback(18, pigpio.RISING_EDGE, discipline)

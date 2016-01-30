@@ -2,15 +2,24 @@
 import json
 import commands
 
-name='ANDOR IXON 888'
-jpg='andor-digital-microscope-camera-iXonUltra888.jpg'
+ixon={}
+ixon['name']='ANDOR IXON 888'
+ixon['jpg']='ixon888.jpg'
+
+apogee={}
+apogee['name']='APOGEE'
+apogee['jpg']='apogee.jpg'
+
+camera=apogee
+
 debug=0
-zmqPort = 5556
+zmqShutterPort = 5556
 zmqGPSPort = 5557
 
 socketsPort = 9999
 httpPort= 5000
 
+ShutterFlange="SHUTTER_LOW"
 
 def getSystemClockData():
 	cmdrst=commands.getstatusoutput('ntpq -c kern')

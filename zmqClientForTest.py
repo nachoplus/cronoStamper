@@ -13,8 +13,8 @@ from config import *
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 #socket.setsockopt(zmq.CONFLATE, 1)
-socket.connect ("tcp://cronostamper:%s" % zmqPort)
-topicfilter = "SHUTTER_HIGH"
+socket.connect ("tcp://cronostamper:%s" % zmqShutterPort)
+topicfilter = ShutterFlange
 socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 # Process

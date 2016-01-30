@@ -13,8 +13,11 @@ lastGPS={}
 
 @app.route('/')
 def index():
-    return render_template('cronoStamper.html', name=name,pic=jpg)
+    return render_template('cronoStamper.html', camera=camera)
 
+@app.route('/help')
+def help():
+    return render_template('help.html')
 
 @app.route('/gps.json')
 def gps_json():
@@ -68,11 +71,11 @@ def lastGPSValue():
 
 if __name__ == '__main__':
 	context = zmq.Context()
-	topicfilter = "SHUTTER_HIGH"
+	topicfilter = ShutterFlange
 	socket = context.socket(zmq.SUB)
 	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
 	socket.setsockopt(zmq.CONFLATE, 1)
-	socket.connect ("tcp://localhost:%s" % zmqPort)
+	socket.connect ("tcp://localhost:%s" % zmqShutterPort)
 	socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 	topicfilter = "GPS"
