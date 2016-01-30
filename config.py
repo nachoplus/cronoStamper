@@ -2,12 +2,15 @@
 import json
 import commands
 
+name='ANDOR IXON 888'
+jpg='andor-digital-microscope-camera-iXonUltra888.jpg'
 debug=0
 zmqPort = 5556
 zmqGPSPort = 5557
 
 socketsPort = 9999
 httpPort= 5000
+
 
 def getSystemClockData():
 	cmdrst=commands.getstatusoutput('ntpq -c kern')
@@ -29,16 +32,16 @@ def getSystemClockData():
 		pllOffset=float(res['pll offset'])
 		maxError=float(res['maximum error'])
 		Error=float(res['estimated error'])
-		status="OK"
+		clkStatus="OK"
 	else:
-        	ppm=0
-		pllOffset=0
-        	maxError="NOT SYNCRONIZED"
-		Error="NOT SYNCRONIZED"
-		status="NOT SYNCRONIZED"
+        	ppm="NTPD FAIL"
+		pllOffset="NTPD FAIL"
+        	maxError="NTPD FAIL"
+		Error="NTPD FAIL"
+		clkStatus="FAIL"
 		print "Warning: NTPD fail"
 
-	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error,'status':status}
+	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error,'clkStatus':clkStatus}
 	return msg
 
 def mogrify(topic, msg):

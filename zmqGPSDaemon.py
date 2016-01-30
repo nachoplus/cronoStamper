@@ -18,19 +18,27 @@ from config import *
 
 class gps2zmq:
      def __init__(self):
-	flags= gps.WATCH_ENABLE | gps.WATCH_PPS 
-	self.session = gps.gps(mode=flags)	
 	self.datakeys=()
-     def run(self):
+	self.gpsdConnect()
+
+     def gpsdConnect(self):
 	try:
-	    while True:
+		flags= gps.WATCH_ENABLE | gps.WATCH_PPS 
+		self.session = gps.gps(mode=flags)	
+		print "GPSD contacted"
+	except:
+		print "GPSD not running. Retrying.."
+
+     def run(self):
+	while True:
+	    clk=getSystemClockData()
+	    fix=dict(clk)
+	    try:
 	        # Do stuff
 	        report = self.session.next()
 	        if report['class'] == 'TPV':
 		        # Do more stuff
-			clk=getSystemClockData()
-			fix=dict(report)
-	     		fix.update(clk)
+	     		fix.update(report)
 			#print fix
 			'''
 			while report['class'] != 'SKY':
@@ -46,15 +54,21 @@ class gps2zmq:
 				fix.update(nsat)
 				
 			'''
+			status={'gpsStatus':'OK'}
+			fix.update(status)
 			self.datakeys=fix.keys()
 			socket.send(mogrify('GPS',fix))
 
-	except StopIteration:
-	    msg={}	
-            for key in self.datakeys:
-		 msg.update({key:'-'})		
-  	    socket.send(mogrify('GPS',msg))
-	    print "GPSD has terminated"
+	    except :
+            	for key in self.datakeys:
+			 fix.update({key:'-'})		
+		fix.update(clk)
+		fix.update({'gpsStatus':'FAIL'})
+	        fix.update({'mode':'GPSD FAIL'})	
+  	    	socket.send(mogrify('GPS',fix))
+		self.gpsdConnect()
+		time.sleep(1)
+		
 	
 
 

@@ -6,10 +6,11 @@
 
 <script type="text/javascript" src= "{{ url_for('static',filename='jquery-2.2.0.min.js') }}"></script>
 <link rel="stylesheet" href= "{{ url_for('static',filename='style.css') }}" type="text/css"/>	
-<script type="text/javascript" src="http://cdn.jsdelivr.net/jqplot/1.0.8/jquery.jqplot.min.js"></script>
-<script type="text/javascript" src="http://cdn.jsdelivr.net/jqplot/1.0.8/plugins/jqplot.dateAxisRenderer.min.js"></script>
-<link href="http://cdn.jsdelivr.net/jqplot/1.0.8/jquery.jqplot.min.css" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="{{ url_for('static',filename='jquery.jqplot.min.js') }}"</script>
+<script type="text/javascript" src="{{ url_for('static',filename='jqplot.dateAxisRenderer.min.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static',filename='jquery.jqplot.min.css') }}" type="text/css" />
 <script>
+var image='{{ pic }}'
 var plot1;
 var plot2;
 var plot_gps;
@@ -259,6 +260,7 @@ function updater() {
                    };
 
 $(document).ready(function() {
+      $('camera').attr("src", './static/'+image)
       var x = (new Date()).getTime();
 	   for(i=0; i<n; i++){  
 	      data_pllOffset.push([x - (n-1-i)*t,0]);  
@@ -324,9 +326,17 @@ $(document).ready(function() {
 <BODY>
     <div align="center">
         <p>
-            cronoStamper by N+
+           <a href='https://github.com/nachoplus/cronoStamper'>cronoStamper</a> by N+
         </p>
+	<h1>{{ name }}</h1>
     </div>
+
+<table>
+<tr>
+<td>
+<img id='camera'></img>
+</td>
+<td>
 <table align='center' class='ShutterTime'>
 <tr><td colspan="2">
 LAST SHUTTER TIME
@@ -339,6 +349,27 @@ LAST SHUTTER TIME
 </td></tr>
 <tr><td>MJD</td><td>
     <div id="MJD" align="left"></div>
+</td></tr>
+</table>
+</td>
+<td>
+<table align='center' class='ShutterTime'>
+<tr><td colspan="2">
+UTC CLOCK VALUES
+</td>
+<tr><td >Clock offset from UTC (milliseconds, estimated)</td><td>
+    <div id="PLLOFFSET" align="left"></div>
+</td></tr>
+<tr><td >Frequency Correction (ppm==microsecond/s)</td><td>
+    <div id="PPM" align="left"></div>
+</td></tr>
+<tr><td>Clock Estimated Error (milliseconds)</td><td>
+    <div id="CLKERROR" align="left"></div>
+</td></tr>
+<tr><td>Clock Max Error (milliseconds)</td><td>
+    <div id="CLKMAXERROR" align="left"></div>
+</td></tr>
+</table>
 </td></tr>
 </table>
 
@@ -357,22 +388,6 @@ LAST SHUTTER TIME
 </tr>
 </table>
 
-<table align='center' class='ShutterTime'>
-<tr><td colspan="2">
-UTC CLOCK VALUES
-</td>
-<tr><td >Clock offset from UTC (milliseconds, estimated)</td><td>
-    <div id="PLLOFFSET" align="left"></div>
-</td></tr>
-<tr><td >Frequency Correction (ppm==microsecond/s)</td><td>
-    <div id="PPM" align="left"></div>
-</td></tr>
-<tr><td>Clock Estimated Error (milliseconds)</td><td>
-    <div id="CLKERROR" align="left"></div>
-</td></tr>
-<tr><td>Clock Max Error (milliseconds)</td><td>
-    <div id="CLKMAXERROR" align="left"></div>
-</td></tr>
 
 
 

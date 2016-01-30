@@ -13,7 +13,7 @@ lastGPS={}
 
 @app.route('/')
 def index():
-    return render_template('cronoStamper.html')
+    return render_template('cronoStamper.html', name=name,pic=jpg)
 
 
 @app.route('/gps.json')
