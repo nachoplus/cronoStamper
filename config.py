@@ -10,7 +10,11 @@ apogee={}
 apogee['name']='APOGEE'
 apogee['jpg']='apogee.jpg'
 
-camera=apogee
+sbig={}
+sbig['name']='SBIG'
+sbig['jpg']='sbig.jpg'
+
+camera=ixon
 
 debug=0
 zmqShutterPort = 5556
