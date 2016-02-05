@@ -14,7 +14,7 @@ sbig={}
 sbig['name']='SBIG'
 sbig['jpg']='sbig.jpg'
 
-camera=ixon
+camera=apogee
 
 debug=0
 zmqShutterPort = 5556

@@ -9,6 +9,22 @@ import socket
 import sys
 from thread import *
 from config import *
+
+
+lastGPS={}
+
+def lastGPSValue():
+	global lastGPS
+	try:
+		m= socketGPS.recv(flags=zmq.NOBLOCK)
+		topic, msg  = demogrify(m)
+		#print "Set:",last
+		lastGPS=msg
+	except:
+		#print "Get:",last
+		msg=lastGPS
+    	return msg
+
  
 HOST = ''   # Symbolic name meaning all available interfaces
 PORT = socketsPort # Arbitrary non-privileged port
@@ -35,13 +51,14 @@ print 'Socket now listening'
 #Function for handling connections. This will be used to create threads
 def clientthread(conn):
 
-    context = zmq.Context()
+
     topicfilter = ShutterFlange
     socket = context.socket(zmq.SUB)
     #only one message (do not work with the stock version of zmq, works from ver 4.1.4)
     socket.setsockopt(zmq.CONFLATE, 1)
     socket.connect ("tcp://localhost:%s" % zmqShutterPort)
     socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
+
 
     #Sending message to connected client
     #conn.send('OK.CronoStamper socket server.\n') #send only takes string
@@ -52,11 +69,32 @@ def clientthread(conn):
 	        #data = conn.recv(1024)
 		m= socket.recv()
 		topic, msg  = demogrify(m)
-		reply = msg['dateUTC']+'\n'
-    		conn.sendall(reply)
-     
-    #came out of loop
-    conn.close()
+		msgGPS = lastGPSValue()
+		try:
+			reply = "%s %010.6f %1.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],msgGPS['mode'],msgGPS['ClkError'])
+		except:
+			reply = "%s ---.------ - -.-------\r\n" % (msg['dateUTC'])
+
+		try:
+			print reply
+    			conn.sendall(reply)
+		
+		except:     
+			#came out of loop
+		    	print 'Disconnected'
+		    	conn.close()
+		    	break
+		
+
+context = zmq.Context()
+
+GPStopicfilter = "GPS"
+socketGPS = context.socket(zmq.SUB)
+#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+socketGPS.setsockopt(zmq.CONFLATE, 1)
+socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
+socketGPS.setsockopt(zmq.SUBSCRIBE, GPStopicfilter)
+
  
 #now keep talking with the client
 while True:
