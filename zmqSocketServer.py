@@ -7,7 +7,7 @@ import zmq
 import time
 import socket
 import sys
-from thread import *
+import threading
 from config import *
 
 
@@ -49,8 +49,8 @@ print 'Socket now listening'
 
 
 #Function for handling connections. This will be used to create threads
-def clientthread(conn):
-
+def clientthread(conn,addr):
+    print 'Connected with ' + addr[0] + ':' + str(addr[1])
 
     topicfilter = ShutterFlange
     socket = context.socket(zmq.SUB)
@@ -76,7 +76,6 @@ def clientthread(conn):
 			reply = "%s ---.------ - -.-------\r\n" % (msg['dateUTC'])
 
 		try:
-			print reply
     			conn.sendall(reply)
 		
 		except:     
@@ -100,9 +99,10 @@ socketGPS.setsockopt(zmq.SUBSCRIBE, GPStopicfilter)
 while True:
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
-    print 'Connected with ' + addr[0] + ':' + str(addr[1])
+
      
     #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-    start_new_thread(clientthread ,(conn,))
- 
+    t = threading.Thread(target=clientthread,args=(conn,addr,))
+    t.start()
+
 s.close()

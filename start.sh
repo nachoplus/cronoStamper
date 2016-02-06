@@ -5,3 +5,4 @@ nohup $DIR/zmqShutterDaemon.py >/dev/null &
 nohup $DIR/zmqGPSDaemon.py >/dev/null &
 nohup $DIR/zmqSocketServer.py >/dev/null &
 nohup $DIR/zmqHttpServer.py >/dev/null &
+nohup $DIR/pingTime.py >/dev/null &
