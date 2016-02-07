@@ -23,6 +23,7 @@ zmqGPSPort = 5557
 socketsPort = 9999
 httpPort= 5000
 
+
 ShutterFlange="SHUTTER_LOW"
 
 def getSystemClockData():

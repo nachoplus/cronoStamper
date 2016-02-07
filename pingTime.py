@@ -11,7 +11,7 @@ import datetime
 import threading
  
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 7777 # Arbitrary non-privileged port
+PORT = 5555 # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print 'Starting CronoStamper ping Time.'

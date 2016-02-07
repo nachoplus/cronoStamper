@@ -17,7 +17,10 @@ __Installing from SD image__
 
 Just burn your SD card with the provided image using raspberry standard way.
 
-boot the raspberry. It will get the IP from DHCP, log as root (defaul passwd: 'albaricoque', change it soon) and run the following commands:
+boot the raspberry. It will get the IP from DHCP, if fail to bring up the eth0 interface delete the 
+/etc/udev/rules.d/70-persistent-net.rules file on the SD card. (see http://raspberrypi.stackexchange.com/questions/26155/cloning-sd-card-causes-interface-eth0-does-not-exist for futher information)
+
+log as root (defaul passwd: 'albaricoque', change it soon) and run the following commands:
 
 >raspi-config
 
