@@ -80,7 +80,7 @@ def clientthread(conn,addr):
 		
 		except:     
 			#came out of loop
-		    	print 'Disconnected'
+		    	print 'Disconnected:' + addr[0] + ':' + str(addr[1])
 		    	conn.close()
 		    	break
 		

@@ -27,6 +27,6 @@ while True:
 	sock.connect(server_address)
 	for j in range(0,5):
 		msg=sock.recv(1024)
-		print i*j,i,j,msg
+		print i*j,i,j,"\t",msg,
 	sock.close()
 	time.sleep(2)
