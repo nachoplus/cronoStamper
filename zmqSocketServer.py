@@ -11,19 +11,6 @@ import threading
 from config import *
 
 
-lastGPS={}
-
-def lastGPSValue():
-	global lastGPS
-	try:
-		m= socketGPS.recv(flags=zmq.NOBLOCK)
-		topic, msg  = demogrify(m)
-		#print "Set:",last
-		lastGPS=msg
-	except:
-		#print "Get:",last
-		msg=lastGPS
-    	return msg
 
  
 HOST = ''   # Symbolic name meaning all available interfaces
@@ -46,9 +33,12 @@ print 'Socket bind complete'
 s.listen(10)
 print 'Socket now listening'
  
+#ZMQ context
+context = zmq.Context()
 
 
 #Function for handling connections. This will be used to create threads
+#Important: Each thread has to have its own zmq sockets to avoid data corruption
 def clientthread(conn,addr):
     print 'Connected with ' + addr[0] + ':' + str(addr[1])
 
@@ -59,40 +49,55 @@ def clientthread(conn,addr):
     socket.connect ("tcp://localhost:%s" % zmqShutterPort)
     socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
+    GPStopicfilter = "GPS"
+    socketGPS = context.socket(zmq.SUB)
+    #CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+    socketGPS.setsockopt(zmq.CONFLATE, 1)
+    socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
+    socketGPS.setsockopt(zmq.SUBSCRIBE, GPStopicfilter)
+
+    lastGPS={}
+
 
     #Sending message to connected client
     #conn.send('OK.CronoStamper socket server.\n') #send only takes string
      
     #infinite loop so that function do not terminate and thread do not end.
     while True:
-	        #Receiving from client
-	        #data = conn.recv(1024)
+		#get shutter time
 		m= socket.recv()
 		topic, msg  = demogrify(m)
-		msgGPS = lastGPSValue()
+
+		#try get GPS and time data
+		try:
+			GPSm= socketGPS.recv(flags=zmq.NOBLOCK)
+			topic, GPSmsg  = demogrify(GPSm)
+			lastGPS=GPSmsg
+			msgGPS = GPSmsg
+		except:
+			msgGPS = lastGPS
+
+
+		#format the reply string
 		try:
 			reply = "%s %010.6f %1.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],msgGPS['mode'],msgGPS['ClkError'])
 		except:
-			reply = "%s ---.------ - -.-------\r\n" % (msg['dateUTC'])
+			reply = "%s %010.6f - -.-------\r\n" % (msg['dateUTC'],msg['pulse'])
 
+		#catch the send reply to manage if client close the socket
 		try:
     			conn.sendall(reply)
-		
+	
 		except:     
-			#came out of loop
+			#came out of loop. close socket and thread
 		    	print 'Disconnected:' + addr[0] + ':' + str(addr[1])
 		    	conn.close()
+			socket.close()
+			socketGPS.close()
 		    	break
 		
 
-context = zmq.Context()
 
-GPStopicfilter = "GPS"
-socketGPS = context.socket(zmq.SUB)
-#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
-socketGPS.setsockopt(zmq.CONFLATE, 1)
-socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
-socketGPS.setsockopt(zmq.SUBSCRIBE, GPStopicfilter)
 
  
 #now keep talking with the client
