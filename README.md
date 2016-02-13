@@ -12,6 +12,17 @@ It is based on pigpiod great daemon (http://abyz.co.uk/rpi/pigpio/index.html)
 
 Nacho Mas - January 2016
 
+
+__HARDWARE__
+----------
+
+Minidin8:
+
+Black ->2
+Red ->3
+orange->gnd
+
+
 __Installing from SD image__
 ----------
 

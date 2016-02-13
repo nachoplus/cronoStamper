@@ -33,17 +33,24 @@ def getPPM():
 #use PPS signal interrupt to get tick:UTCtime point
 def discipline(gpio, level, tick):
 	global RTCsecond,RTCtick,ppm
+	diff=pigpio.tickDiff(RTCtick,tick)
 	now=time.time()
 	getPPM()
+	#trying to avoid spurius signals
+	#not update if there is less than 0.9999 seconds
+	if diff <999900:
+		print "Spuck!",diff
+		return
 	RTCsecond=int(round(now))
 	RTCtick=tick
-	#print (now,RTCsecond,ppm,pllOffset,RTCtick)
+	print (now,RTCsecond,RTCtick,tick,diff)
 	
 
 #corrected RTCsecond,RTCtick and ppm 
 def ticks2unixUTC(tick):
 	global RTCsecond,RTCtick,ppm
 	tickOffset=pigpio.tickDiff(RTCtick, tick)
+	print RTCsecond,RTCtick,tick,tickOffset
 	bias=ppm*(tickOffset/1000000.)
 	UTC=float(RTCsecond)+(tickOffset+bias)/1000000.
 	#print (RTCsecond,ppm,tick,tickOffset,pllOffset,bias,UTC)
@@ -92,6 +99,9 @@ if __name__ == '__main__':
 	socket = context.socket(zmq.PUB)
 	socket.bind("tcp://*:%s" % zmqShutterPort)
 	getSystemClockData()
+	print pi.get_mode(11), pi.get_mode(11)
+	pi.set_pull_up_down(11, pigpio.PUD_DOWN)
+	pi.set_pull_up_down(18, pigpio.PUD_DOWN)
 	cb1 = pi.callback(11, pigpio.EITHER_EDGE, GPIOshutter)
 	cb2 = pi.callback(18, pigpio.RISING_EDGE, discipline)
 	while True:

@@ -40,9 +40,9 @@ nthreads=0
 
 #Function for handling connections. This will be used to create threads
 #Important: Each thread has to have its own zmq sockets to avoid data corruption
-def clientthread(conn,addr):
+def clientthread(conn,addr,n):
     global nthreads
-    print str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads
+    print str(n),str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads
 
     #ZMQ context
     context = zmq.Context()
@@ -93,13 +93,12 @@ def clientthread(conn,addr):
 
 		#catch the send reply to manage if client close the socket
 		try:
-			print reply,
     			conn.sendall(reply)
-	
+			print str(n),reply,	
 		except:     
 			#came out of loop. close socket and thread
 			nthreads-=1
-		    	print str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads
+		    	print str(n),str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads
 		    	conn.close()
 			socketShutter.close()
 			socketGPS.close()
@@ -115,10 +114,10 @@ while True:
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
 
-     
+    nthreads+=1     
     #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-    t = threading.Thread(target=clientthread,args=(conn,addr,))
+    t = threading.Thread(target=clientthread,args=(conn,addr,nthreads,))
     t.start()
-    nthreads+=1
+
 
 s.close()
