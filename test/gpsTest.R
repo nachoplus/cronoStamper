@@ -1,6 +1,7 @@
-c<-read.table('gpsPPS.dat')
+c<-read.table('gpsPPS0.dat')
 summary(c)
 nrecords<-nrow(c)
+c<-head(c,nrecords-1)
 f<-head(c$V1,1)
 s <- seq(f,f+nrecords,by=1.)  
 s

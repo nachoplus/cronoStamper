@@ -42,8 +42,9 @@ def discipline(gpio, level, tick):
 		print "Spuck!",diff
 		return
 	RTCsecond=int(round(now))
-	RTCtick=tick
 	print (now,RTCsecond,RTCtick,tick,diff)
+	RTCtick=tick
+
 	
 
 #corrected RTCsecond,RTCtick and ppm 
