@@ -3,18 +3,18 @@ import json
 import commands
 
 ixon={}
-ixon['name']='ANDOR IXON 888'
+ixon['name']='ANTSY'
 ixon['jpg']='ixon888.jpg'
 
 apogee={}
-apogee['name']='APOGEE'
+apogee['name']='CENTU'
 apogee['jpg']='apogee.jpg'
 
 sbig={}
-sbig['name']='SBIG'
+sbig['name']='TRACKER'
 sbig['jpg']='sbig.jpg'
 
-camera=apogee
+camera=sbig
 
 debug=0
 zmqShutterPort = 5556
