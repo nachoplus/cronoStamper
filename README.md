@@ -15,8 +15,10 @@ Nacho Mas - January 2016
 
 __HARDWARE__
 ----------
+Conect the GPS serial port to the raspberry serial port. Connect also power suply (GND and +3.3V). PSS signal is wire to rasperry pin 18. Signal pin is the raspi pin 11.
 
-Minidin8:
+
+Cable for Minidin8 conector for Apogee Alta:
 
 Black ->2
 Red ->3
@@ -36,6 +38,8 @@ log as root (defaul passwd: 'albaricoque', change it soon) and run the following
 >raspi-config
 
 > ---> Expand Filesystem  -> //Do it
+
+
 
 
 Then edit your /etc/network/interface to set the IP address and /home/cronos/cronostamper/config.py to customize the variables
@@ -60,6 +64,7 @@ boot the raspberry log as root (defaul passwd: 'raspberry', change it soon) and 
 >raspi-config
 
 > ---> Expand Filesystem  -> //Do it
+> ---> Internationalisation Options --> Change Timezone -> Etc -> UTC
 
 >apt-get install nano apt-utils bash-completion rpi-update raspi-config 
 
