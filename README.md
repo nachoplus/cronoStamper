@@ -10,12 +10,15 @@ It is based on pigpiod great daemon (http://abyz.co.uk/rpi/pigpio/index.html)
 
 ![Cronostamper](cronostamper.jpg?raw=true "")
 
+The signal activation timestamp is available connetting to socket 9999 by default. 
+Http page showing the status is running on por 5000 by default.
+
 Nacho Mas - January 2016
 
 
 __HARDWARE__
 ----------
-Conect the GPS serial port to the raspberry serial port. Connect also power suply (GND and +3.3V). PSS signal is wire to rasperry pin 18. Signal pin is the raspi pin 11.
+Connect the GPS serial port to the raspberry serial port. Connect also power supply (GND and +3.3V). PSS signal is wire to rasperry pin 18. Signal pin is the raspi pin 11.
 
 
 Cable for Minidin8 conector for Apogee Alta:
