@@ -8,7 +8,7 @@ High precisión timestamping using raspberry GPIO.
 
 It is based on pigpiod great daemon (http://abyz.co.uk/rpi/pigpio/index.html)
 
-(https://raw.githubusercontent.com/nachoplus/cronoStamper/master/test/cronoStamper.png)
+![Cronostamper](master/cronoStamper.png?raw=true "")
 
 Nacho Mas - January 2016
 
