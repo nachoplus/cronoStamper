@@ -27,7 +27,7 @@ __HARDWARE__
 
 Connect the GPS serial port to the raspberry serial port. Connect also power supply (GND and +3.3V). PSS signal is wire to rasperry pin 18. Signal pin is the raspi pin 11. Detail connections:
 
-GPS module to RPI conections
+GPS module to RPI conections:
 
 GPS Pin | RPI Pin
 --- | ---
@@ -37,7 +37,8 @@ TXD |   10 (UART_RXD GPIO15)
 RXD |   8 (UART_TXD GPIO14)
 PPS |   12 (GPIO18)
 
-Trigger signal (probe connector)
+Trigger signal (probe connector):
+
 Probe | RPI Pin
 --- | ---
 GND | 23 (GND)
@@ -47,6 +48,8 @@ SIGNAL | 25 (GPIO11)
 
 Cable for Minidin8 conector for Apogee Alta:
 
+Probe | MiniDIN8
+--- | ---
 Black |2
 Red -|3
 Orange-|gnd
