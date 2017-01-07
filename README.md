@@ -29,25 +29,27 @@ Connect the GPS serial port to the raspberry serial port. Connect also power sup
 
 GPS module to RPI conections
 
->GPS Pin ----- RPI Pin
->    VCC -----   1 (3.3V)
->    GND -----   6 (GND)
->    TXD -----  10 (UART_RXD GPIO15)
->    RXD -----   8 (UART_TXD GPIO14)
->    PPS -----  12 (GPIO18)
+GPS Pin | RPI Pin
+--- | ---
+VCC |   1 (3.3V)
+GND |   6 (GND)
+TXD |   10 (UART_RXD GPIO15)
+RXD |   8 (UART_TXD GPIO14)
+PPS |   12 (GPIO18)
 
 Trigger signal (probe connector)
-
->    GND  ----- 23 (GND)
->    SIGNAL --- 25 (GPIO11)
+Probe | RPI Pin
+--- | ---
+GND | 23 (GND)
+SIGNAL | 25 (GPIO11)
 
 
 
 Cable for Minidin8 conector for Apogee Alta:
 
->Black ->2
->Red ->3
->orange->gnd
+Black |2
+Red -|3
+Orange-|gnd
 
 
 __Installing from SD image__
