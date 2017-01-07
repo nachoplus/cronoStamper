@@ -10,15 +10,40 @@ It is based on pigpiod great daemon (http://abyz.co.uk/rpi/pigpio/index.html)
 
 ![Cronostamper](cronostamper.jpg?raw=true "")
 
-The signal activation timestamp is available connetting to socket 9999 by default. 
-Http page showing the status is running on por 5000 by default.
+
 
 Nacho Mas - January 2016
+
+__PORTS__
+----------
+The signal activation timestamp is available connetting to socket 9999. Telneting to that port return the last signal timestamp and close the connection.
+
+There is a http page showing the status is running on port 5000. Check it to know if GPS/ntp is ready.
+
 
 
 __HARDWARE__
 ----------
-Connect the GPS serial port to the raspberry serial port. Connect also power supply (GND and +3.3V). PSS signal is wire to rasperry pin 18. Signal pin is the raspi pin 11.
+
+Connect the GPS serial port to the raspberry serial port. Connect also power supply (GND and +3.3V). PSS signal is wire to rasperry pin 18. Signal pin is the raspi pin 11. Detail connections:
+
+GPS module to RPI conections
+============================
+
+
+GPS Pin -----> RPI Pin
+    VCC -----   1 (3.3V)
+    GND -----   6 (GND)
+    TXD -----  10 (UART_RXD GPIO15)
+    RXD -----   8 (UART_TXD GPIO14)
+    PPS -----  12 (GPIO18)
+
+Trigger signal (probe connector)
+============================
+
+    GND  ----- 23 (GND)
+    SIGNAL --- 25 (GPIO11)
+
 
 
 Cable for Minidin8 conector for Apogee Alta:
