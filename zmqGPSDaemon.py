@@ -1,6 +1,11 @@
 #! /usr/bin/python
-# Written by Dan Mandle http://dan.mandle.me September 2012
-# License: GPL 2.0
+'''
+Get data from GPSD to know if GPS subsyste is working ok.
+
+Base on the work of Dan Mandle http://dan.mandle.me September 2012
+
+Nacho Mas Junary-2017
+'''
  
 import os
 import gps

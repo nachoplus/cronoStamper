@@ -1,4 +1,10 @@
 #!/usr/bin/python
+'''
+Main configuration file.
+
+Nacho Mas January-2017
+'''
+
 import json
 import commands
 
@@ -23,9 +29,18 @@ zmqGPSPort = 5557
 socketsPort = 9999
 httpPort= 5000
 
+#socat command have to be launch before:
+#'socat pty,link=/tmp/cronostamperCOM,raw TCP-LISTEN:27644,reuseaddr &'
+serialPortName='/tmp/cronostamperCOM'
 
+
+#topic to be reported. In this case the end of the SIGNAL pulse
 ShutterFlange="SHUTTER_LOW"
 
+SIGNAL_GPIO=11
+PPS_GPIO=18
+
+#some functions used in several places
 def getSystemClockData():
 	cmdrst=commands.getstatusoutput('ntpq -c kern')
 	status=cmdrst[0]

@@ -1,2 +1,3 @@
 #!/bin/bash
-socat -d TCP:192.168.1.36:27644,reuseaddr  pty,link=/tmp/cronostamperCOM &
+#Just an example of how to redir serial port to the network
+socat -d TCP:cronostamper:27644,reuseaddr  pty,link=/tmp/cronostamperCOM &

@@ -1,6 +1,11 @@
 #!/usr/bin/python
 '''
-    Simple socket server using threads
+Cronostamper test suit:
+Simple  trigger simulator. Open a socket and execute
+/oneShot when someone get connected and exit.
+
+"oneshot" activate the GPIO 7 just one time.
+Nacho Mas Junary-2017
 '''
 
 import socket

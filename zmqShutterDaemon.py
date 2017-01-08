@@ -1,5 +1,10 @@
 #!/usr/bin/python
+'''
+Get the timestamp of SIGNAL activation and 
+send a msg througth zmq.PUB
 
+Nacho Mas January-2017
+'''
 import pigpio
 import time
 import datetime
@@ -100,11 +105,11 @@ if __name__ == '__main__':
 	socket = context.socket(zmq.PUB)
 	socket.bind("tcp://*:%s" % zmqShutterPort)
 	getSystemClockData()
-	print pi.get_mode(11), pi.get_mode(11)
-	pi.set_pull_up_down(11, pigpio.PUD_DOWN)
-	pi.set_pull_up_down(18, pigpio.PUD_DOWN)
-	cb1 = pi.callback(11, pigpio.EITHER_EDGE, GPIOshutter)
-	cb2 = pi.callback(18, pigpio.RISING_EDGE, discipline)
+	print pi.get_mode(SIGNAL_GPIO), pi.get_mode(PPS_GPIO)
+	pi.set_pull_up_down(SIGNAL_GPIO, pigpio.PUD_DOWN)
+	pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
+	cb1 = pi.callback(SIGNAL_GPIO, pigpio.EITHER_EDGE, GPIOshutter)
+	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
 	while True:
 	    time.sleep(1)
 

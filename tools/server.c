@@ -1,3 +1,11 @@
+/*
+Cronostamper test suit:
+This program do a periodic activation on a Raspi GPIO 7 
+and show the UTC time.
+
+Nacho Mas January-2017
+*/
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <wiringPi.h>

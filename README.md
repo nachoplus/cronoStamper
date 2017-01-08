@@ -51,8 +51,8 @@ Cable for Minidin8 conector for Apogee Alta:
 Probe | MiniDIN8
 --- | ---
 Black |2
-Red -|3
-Orange-|gnd
+Red|3
+Orange|GND
 
 
 __Installing from SD image__

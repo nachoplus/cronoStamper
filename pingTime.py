@@ -1,8 +1,10 @@
 #!/usr/bin/python
 '''
-    Simple socket server using threads
-'''
+Pingtime. Return the timestamp of
+a newly open connection.
 
+Nacho Mas January-2017
+'''
 import socket
 import commands
 import sys

@@ -1,5 +1,12 @@
 #!/usr/bin/python
-## OBSOLETE BY mzqSocketServer.py
+'''
+Server the event time througth 
+a serial port
+
+OBSOLETE BY mzqSocketServer.py!!
+Nacho Mas January-2017
+'''
+
 import zmq
 import time
 import os, pty, serial
@@ -16,7 +23,7 @@ if __name__ == '__main__':
 	socket = context.socket(zmq.SUB)
 	#only one message (do not work with the stock version of zmq, works from ver 4.1.4)
 	socket.setsockopt(zmq.CONFLATE, 1)
-	socket.connect ("tcp://localhost:%s" % zmqPort)
+	socket.connect ("tcp://localhost:%s" % zmqShutterPort)
 	socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 	ser = serial.Serial(serialPortName)

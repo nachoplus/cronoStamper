@@ -1,4 +1,12 @@
 #!/usr/bin/python
+'''
+HTTP server
+Show several stats and has a littel url interface:
+
+/dateUTC return the UTC timestamp of the last SIGNAL
+
+Nacho Mas January-2017
+'''
 
 from flask import Flask, render_template, request, jsonify
 from functools import wraps, update_wrapper
@@ -60,7 +68,7 @@ def lastGPSValue():
 	global lastGPS
 	try:
 		m= socketGPS.recv(flags=zmq.NOBLOCK)
-		topic, msg  = demogrify(m)
+		topic, msg  = demogrify(m)help
 		#print "Set:",last
 		lastGPS=msg
 	except:

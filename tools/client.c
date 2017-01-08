@@ -1,3 +1,11 @@
+/*
+Cronostamper test suit:
+This program is a simple client that show
+the UTC time when PIN 11 is activated.
+
+Nacho Mas January-2017
+*/
+
 #include <stdio.h>
 #include <sys/time.h>
 #include <wiringPi.h>

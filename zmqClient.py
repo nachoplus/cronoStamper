@@ -1,4 +1,11 @@
 #!/usr/bin/python
+'''
+Example of zmq client.
+Can be used to record test data on
+remote PC
+
+Nacho Mas January-2017
+'''
 
 import sys
 import zmq
@@ -12,8 +19,8 @@ from config import *
 context = zmq.Context()
 socket = context.socket(zmq.SUB)
 #socket.setsockopt(zmq.CONFLATE, 1)
-socket.connect ("tcp://localhost:%s" % zmqGPSPort)
-topicfilter = ""
+socket.connect ("tcp://cronostamper:%s" % zmqShutterPort)
+topicfilter = ShutterFlange
 socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
 # Process

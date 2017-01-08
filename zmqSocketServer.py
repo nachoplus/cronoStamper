@@ -1,6 +1,11 @@
 #!/usr/bin/python
 '''
-    Simple socket server using threads
+Sockets server- 
+On connect send a string with the 
+timestamp of the last high SIGNAL.
+Then close the sockets
+
+Nacho Mas January-2017
 '''
 
 import zmq
