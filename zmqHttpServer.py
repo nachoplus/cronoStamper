@@ -68,7 +68,7 @@ def lastGPSValue():
 	global lastGPS
 	try:
 		m= socketGPS.recv(flags=zmq.NOBLOCK)
-		topic, msg  = demogrify(m)help
+		topic, msg  = demogrify(m)
 		#print "Set:",last
 		lastGPS=msg
 	except:

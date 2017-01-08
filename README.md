@@ -156,6 +156,14 @@ Check last version from http://www.ntp.org/downloads.html
 
 >./configure --enable-linuxcaps
 
+
+>Create symlink to pps0 and gps0 automatically at boot:
+
+>Specifically, create the file: /etc/udev/rules.d/09.pps.rules with the following contents:
+
+>KERNEL=="ttyAMA0", SYMLINK+="gps0"
+>KERNEL=="pps0", OWNER="root", GROUP="tty", MODE="0660", SYMLINK+="gpspps0"
+
 >make
 
 >make install
@@ -170,18 +178,18 @@ Edit the configuration file:
 
 at the end of the file include this lines:
 
->\# GPS Serial data reference
+>\#PPS driver
 
->server 127.127.28.0
-
->fudge 127.127.28.0 
+>server 127.127.22.0 minpoll 4 maxpoll 4
+>fudge 127.127.22.0 flag3 1  refid PPS
 
 >\# GPS Serial data reference
 
 >server 127.127.28.0 minpoll 4 maxpoll 4 prefer
-
 >fudge 127.127.28.0 time1 0.140 refid GPS
 
+IMPORTANT: To avoid DHCP overwrite ntp.conf settings delete the word 'ntp-server' in the
+line 'request' of your /etc/dhcp/dhclient.conf
 
 Close and restart
 
