@@ -20,7 +20,11 @@ sbig={}
 sbig['name']='TRACKER'
 sbig['jpg']='sbig.jpg'
 
-camera=sbig
+fli={}
+fli['name']='FLI Cobalt'
+fli['jpg']='fliCobalt.jpg'
+
+camera=fli
 
 debug=0
 zmqShutterPort = 5556

@@ -41,8 +41,8 @@ Trigger signal (probe connector):
 
 Probe | RPI Pin
 --- | ---
-GND | 23 (GND)
-SIGNAL | 25 (GPIO11)
+GND | 25 (GND)
+SIGNAL | 23 (GPIO11)
 
 
 
@@ -128,13 +128,38 @@ Edit some files
 
 Add dtoverlay=pps-gpio,gpiopin=18 on a new line
 
+Add pps kernel module at startup:
+
 >nano /etc/modules 
 
 Add pps-gpio on a new line, if it is not already present.
 
 >nano /etc/default/gpsd
 
-Set GPSD_OPTIONS="-n" and DEVICE='/dev/ttyAMA0'
+GPSD_OPTIONS="-n" and DEVICE='/dev/ttyAMA0'
+
+Raspberry PI Model 3 has wifi and bluetooth. BT chip use the port /dev/ttyAMA0 internaly so some change are needed. There is two posibilites:
+
+Option 1:
+Enable a secondary uart puting this line in /boot/config.txt
+enable_uart=1 
+
+This enable a secondary UART on /dev/ttyS0. Then configure gpsd to use this port:
+>nano /etc/default/gpsd
+GPSD_OPTIONS="-n" and DEVICE='/dev/ttyS0'
+
+Option 2:
+If you prefer to disable wifi and bluetooth and reused /dev/ttyAMA0 for the GPS in a raspberry PI 3 add this line in /boot/config.txt
+
+dtoverlay=pi3-disable-bt
+
+and then blacklist the wifi and bt modules in /etc/modprobe/raspi-blacklist.conf adding this lines:
+>#wifi
+>blacklist brcmfmac
+>blacklist brcmutil
+>#bt
+>blacklist btbcm
+>blacklist hci_uart
 
 >reboot
 
