@@ -31,29 +31,40 @@ set multiplot layout 2,2 rowsfirst title "Cronostamper Test. Date:".date."\nHost
 set title "PPS Reference Clock"
 set ylabel "Clock offset (ms)"
 set xlabel "Time"
+set label 1 "System Clock deviation from\nPPS(pulse per second) signal" at graph 0.05,0.95
 plot \
-"< grep -a '127.127.22.0' /var/log/ntpstats/peerstats|tail -200" u ($2+timeoffsettoday):($5*1000):($8*1000) w errorbars t 'PPS error'   lt 1,\
-"< grep -a '127.127.22.0' /var/log/ntpstats/peerstats|tail -200" u ($2+timeoffsettoday):($5*1000) t 'PPS'   lt 3,\
+"< grep -a '127.127.22.0' /var/log/ntpstats/peerstats|tail -2000" u ($2+timeoffsettoday):($5*1000):($8*1000) w errorbars t 'PPS error'   lt 1,\
+"< grep -a '127.127.22.0' /var/log/ntpstats/peerstats|tail -2000" u ($2+timeoffsettoday):($5*1000) t 'PPS'   lt 3,\
 0 w l lt -1
 
-set title "GPS Reference Clock"
+set title "GPS  Clock"
+unset label 1
+set label 2 "GPS Time deviation from System Clock.\nMostly due to GPS serial interface latency" at graph 0.05,0.95
 plot \
-"< grep -a '127.127.28.0' /var/log/ntpstats/peerstats|tail -200" u ($2+timeoffsettoday):($5*1000):($8*1000) t 'GPS' w errorbars  lt 2,\
+"< grep -a '127.127.28.0' /var/log/ntpstats/peerstats|tail -2000" u ($2+timeoffsettoday):($5*1000):($8*1000) t 'GPS' w errorbars  lt 2,\
 0 w l lt -1
 
-set title "GPS vs PPS"
+
+set title "Internet stratum 2 server"
+unset label 2
+set label 3 "System Clock deviation as from\nsome internet stratum 2 servers.\nNot used only as reference." at graph 0.05,0.95
+
 plot \
-"< grep -a '127.127.22.0' /var/log/ntpstats/peerstats|tail -200" u ($2+timeoffsettoday):($5*1000) t 'PPS'    lt 1,\
-"< grep -a '127.127.28.0' /var/log/ntpstats/peerstats|tail -200" u ($2+timeoffsettoday):($5*1000) t 'GPS'   lt 2,\
+"< grep -a '213.251.52.234' /var/log/ntpstats/peerstats|tail -2000" u ($2+timeoffsettoday):($5*1000):($8*1000) w errorbars t '213.251.52.234 error'   lt 1,\
+"< grep -a '213.251.52.234' /var/log/ntpstats/peerstats|tail -2000" u ($2+timeoffsettoday):($5*1000) t '213.251.52.234'   lt 1,\
+0 w l lt -1, \
+"< grep -a '178.172.163.254' /var/log/ntpstats/peerstats|tail -2000" u ($2+timeoffsettoday):($5*1000):($8*1000) w errorbars t '178.172.163.254 error'   lt 2,\
+"< grep -a '178.172.163.254' /var/log/ntpstats/peerstats|tail -2000" u ($2+timeoffsettoday):($5*1000) t '178.172.163.254'   lt 2,\
 0 w l lt -1
 
 set title "Clock ajustments"
-
+unset label 3
+set label 4 "Raspberry cristal oscilator drift and Systen Clock deviation\nfrom the Reference Clock (usually the PPS signal)" at graph 0.05,0.95
 set ylabel "Clock offset (ms)"
 set y2label "Frequency offset (PPM or microsecons/second)"
 plot \
-  "<cat  /var/log/ntpstats/loopstats|tail -200" u ($2+timeoffsettoday):($3*1000):($5*1000/2) t "Clock offset" w errorlines lt 3 lw 1 pt 1, \
-"<cat /var/log/ntpstats/loopstats|tail -200" u ($2+timeoffsettoday):($4):($6/2) axes x1y2 t "Frequency offset" w errorline lt 1 lw 1 pt 1, \
+  "<cat  /var/log/ntpstats/loopstats|tail -2000" u ($2+timeoffsettoday):($3*1000):($5*1000/2) t "Clock offset" w errorlines lt 3 lw 1 pt 1, \
+"<cat /var/log/ntpstats/loopstats|tail -2000" u ($2+timeoffsettoday):($4):($6/2) axes x1y2 t "Frequency correction" w errorline lt 1 lw 1 pt 1, \
 0 w l lt -1
 
 pause mouse close
