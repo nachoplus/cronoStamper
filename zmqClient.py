@@ -26,7 +26,7 @@ socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 # Process
 while True:
 	    	topic, msg  = demogrify(socket.recv())
-		print msg
+		print "%f" % msg['unixUTC']
 		#time.sleep(5)
 
       

@@ -110,6 +110,20 @@ function updateGPS() {
 	$('#PPM').text(data.ppm);
 	$('#CLKERROR').text(data.ClkError);
 	$('#CLKMAXERROR').text(data.ClkMaxError);
+	$('#CLKSOURCE').text(data.clkReferenceID);
+	if (data.clkReferenceID=='PPS') {
+		$("#CLKSOURCE").css("color","#0a0")
+		$("#CLKSOURCE").css("font-weight","normal")
+		$(".ShutterTime").css( "border", "1px solid black" );
+		$("#READY").css("color","#0a0")
+		$("#READY").text('READY')
+	} else {
+		$("#CLKSOURCE").css("color","#c00")
+		$("#CLKSOURCE").css("font-weight","bold")
+		$(".ShutterTime").css( "border", "3px solid red" );
+		$("#READY").css("color","#c00")
+		$("#READY").text('NOT READY')
+	}
 
      var R=6371000;
      var x = (new Date()).getTime();
@@ -327,6 +341,7 @@ $(document).ready(function() {
            <a href='https://github.com/nachoplus/cronoStamper'>cronoStamper</a> by N+
         <hr>
 	<h1 >{{ camera.name }}</h1>
+	<h2 id='READY'></h2>
     </div>
 
 <table class='container'>
@@ -334,6 +349,7 @@ $(document).ready(function() {
 <td>
 {% set im=url_for('static',filename= camera.jpg  ) %}
 <img id='camera' src={{ im }} ></img>
+<div id='READY'></div>
 </td>
 <td>
 <table align='center' class='ShutterTime'>
@@ -390,6 +406,9 @@ GPS
 <tr><td colspan="2">
 CLOCK
 </td>
+<tr><td >Clock source (wait until equal to 'PPS')</td><td>
+    <div id="CLKSOURCE" align="left"></div>
+</td></tr>
 <tr><td >Clock offset from UTC (milliseconds, estimated)</td><td>
     <div id="PLLOFFSET" align="left"></div>
 </td></tr>
