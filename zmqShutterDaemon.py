@@ -34,6 +34,7 @@ def getPPM():
 
 
 
+
 #get data to correlate system time with the CPU ticks
 #use PPS signal interrupt to get tick:UTCtime point
 def discipline(gpio, level, tick):

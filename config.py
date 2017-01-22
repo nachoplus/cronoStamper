@@ -66,7 +66,13 @@ def getSystemClockData():
 		pllOffset=float(res['pll offset'])
 		maxError=float(res['maximum error'])
 		Error=float(res['estimated error'])
-		clkStatus="OK"
+	else:
+        	ppm="0"
+		pllOffset="9999."
+        	maxError="9999."
+		Error="9999."
+		print "Warning: NTPD fail"
+
 	cmdrst=commands.getstatusoutput('ntpq -c sysinfo')
 	status=cmdrst[0]
 	rst=cmdrst[1]
@@ -83,17 +89,16 @@ def getSystemClockData():
 				res[key]=value
 
 		referenceID=res['reference ID'].strip()
-
 	else:
-        	ppm="-9999"
-		pllOffset="-9999"
-        	maxError="-9999"
-		Error="-9999"
-		clkStatus="-9999"
 		print "Warning: NTPD fail"
 		referenceID="NTPD FAIL"
 
-	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error,'clkStatus':clkStatus,'clkReferenceID':referenceID}
+	if referenceID=='PPS':
+		ppsOK=True
+	else:
+		ppsOK=False
+
+	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error,'ppsOK':ppsOK,'clkReferenceID':referenceID}
 	return msg
 
 def mogrify(topic, msg):

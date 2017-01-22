@@ -111,7 +111,7 @@ function updateGPS() {
 	$('#CLKERROR').text(data.ClkError);
 	$('#CLKMAXERROR').text(data.ClkMaxError);
 	$('#CLKSOURCE').text(data.clkReferenceID);
-	if (data.clkReferenceID=='PPS') {
+	if (data.ppsOK) {
 		$("#CLKSOURCE").css("color","#0a0")
 		$("#CLKSOURCE").css("font-weight","normal")
 		$(".ShutterTime").css( "border", "1px solid black" );
@@ -404,7 +404,7 @@ GPS
 <td>
 <table align='center' class='ShutterTime'>
 <tr><td colspan="2">
-CLOCK
+CLOCK <a href='clkStatus'>(graphs)</a>
 </td>
 <tr><td >Clock source (wait until equal to 'PPS')</td><td>
     <div id="CLKSOURCE" align="left"></div>

@@ -8,10 +8,11 @@ Show several stats and has a littel url interface:
 Nacho Mas January-2017
 '''
 
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify,send_from_directory
 from functools import wraps, update_wrapper
 import zmq
 import time
+import os
 from config import *
 
 app = Flask(__name__)
@@ -51,6 +52,23 @@ def MJD():
 @app.route('/gps_chart')
 def gps_chart():
     return render_template('clock_chart.html')
+
+@app.route('/clkStatus')
+def clkStatus():
+	deep=request.args.get('deep')
+	if deep==None:
+		deep='200'
+	os.environ["_CLK_SAMPLES"] = deep
+	getpeersCMD="ntpq -np|grep '+'"
+	peers=commands.getstatusoutput(getpeersCMD)
+	peer0=peers[1].split()[0][1:]
+	os.environ["_NTP_INTERNET_PEER0"] = peer0
+	os.environ["_NTP_INTERNET_PEER1"] = 'kk1'
+	path=os.path.dirname(os.path.realpath(__file__))
+	exe=path+'/test/peerGraph.plot  >'+path+'/test/clockStats.png'
+	cmdrst=commands.getstatusoutput(exe)
+	return send_from_directory(directory=path+'/test', filename='clockStats.png')
+
 
 def lastValue():
 	global last

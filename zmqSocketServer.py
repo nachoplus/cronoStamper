@@ -91,11 +91,15 @@ def clientthread(conn,addr,n):
 
 
 		#format the reply string
+		ppsOK=0
+		clkError=9999.
 		try:
-			reply = "%s %010.6f %1.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],msgGPS['mode'],msgGPS['ClkError'])
+			if msgGPS['ppsOK']:
+				ppsOK=1
+			clkError=float(msgGPS['ClkError'])
 		except:
-			reply = "%s %010.6f - -.-------\r\n" % (msg['dateUTC'],msg['pulse'])
-
+			pass
+		reply = "%s %010.6f %01.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],ppsOK,clkError)
 		#catch the send reply to manage if client close the socket
 		try:
     			conn.sendall(reply)
