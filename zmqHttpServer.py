@@ -62,11 +62,16 @@ def clkStatus():
 	getpeersCMD="ntpq -np|grep '+'"
 	peers=commands.getstatusoutput(getpeersCMD)
 	peers=peers[1].split('\n')
-	print peers
-	peer0=peers[0].split()[0][1:]
-	os.environ["_NTP_INTERNET_PEER0"] = peer0
-	peer1=peers[1].split()[0][1:]
-	os.environ["_NTP_INTERNET_PEER1"] = peer1
+	npeers=len(peers)
+	print npeers,peers
+	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
+	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
+	if npeers>=1:
+		peer=peers[0].split()[0][1:]
+		os.environ["_NTP_INTERNET_PEER0"] = peer
+	if npeers>=2:
+		peer=peers[1].split()[0][1:]
+		os.environ["_NTP_INTERNET_PEER1"] = peer
 	path=os.path.dirname(os.path.realpath(__file__))
 	exe=path+'/test/peerGraph.plot  >'+path+'/test/clockStats.png'
 	cmdrst=commands.getstatusoutput(exe)
