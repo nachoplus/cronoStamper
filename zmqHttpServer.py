@@ -67,8 +67,9 @@ def clkStatus():
 	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
 	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
 	if npeers>=1:
-		peer=peers[0].split()[0][1:]
-		os.environ["_NTP_INTERNET_PEER0"] = peer
+		if len(peers[0])>10:
+			peer=peers[0].split()[0][1:]
+			os.environ["_NTP_INTERNET_PEER0"] = peer
 	if npeers>=2:
 		peer=peers[1].split()[0][1:]
 		os.environ["_NTP_INTERNET_PEER1"] = peer
