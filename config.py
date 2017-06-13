@@ -21,7 +21,7 @@ sbig['name']='TRACKER'
 sbig['jpg']='sbig.jpg'
 
 fli={}
-fli['name']='FLI Cobalt'
+fli['name']='CENTU1'
 fli['jpg']='fliCobalt.jpg'
 
 camera=fli
@@ -39,8 +39,11 @@ httpPort= 5000
 #serialPortName='/tmp/cronostamperCOM'
 
 
-#topic to be reported. In this case the end of the SIGNAL pulse
-ShutterFlange="SHUTTER_LOW"
+#topic to be reported. 
+#for pulse on open shutter (direct logic)
+#ShutterFlange="SHUTTER_LOW"
+#for pulse on close shutter (inverted logic)
+ShutterFlange="SHUTTER_HIGH"
 
 SIGNAL_GPIO=11
 PPS_GPIO=18

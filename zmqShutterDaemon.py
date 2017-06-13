@@ -68,15 +68,24 @@ def GPIOshutter(gpio, level, tick):
 	global lastHIGH,lastLOW
 	unixUTC=ticks2unixUTC(tick)
 	if level == 1:
+		#INVERTED LOGIC
+		#Inform when shutter signal goes to HIGH.
+		#start time = lastLOW
+		#Pulse timespan from last HIGH flange
 		topic="SHUTTER_HIGH"
 		lastHIGH=unixUTC
 		pulse=unixUTC-lastLOW
+		unixUTC_= lastLOW
 	else:
+		#DIRECT LOGIC
+		#Inform when shutter signal goes to HIGH.
+		#start time = lastHIGH
+		#Pulse timespan from last HICH flange
 		topic="SHUTTER_LOW"
 		lastLOW=unixUTC
 		pulse=unixUTC-lastHIGH
+		unixUTC_= lastHIGH
 
-	unixUTC_= lastHIGH
 	pulse=round(pulse,6)
 	dateUTC=unixTime2date(unixUTC_)
 	MJD=unixTime2MJD(unixUTC_)
