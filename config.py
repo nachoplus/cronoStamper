@@ -29,7 +29,7 @@ camera=fli
 debug=0
 zmqShutterPort = 5556
 zmqGPSPort = 5557
-
+zmqTripPort = 5558
 socketsPort = 9999
 httpPort= 5000
 
@@ -41,12 +41,14 @@ httpPort= 5000
 
 #topic to be reported. 
 #for pulse on open shutter (direct logic)
-#ShutterFlange="SHUTTER_LOW"
+ShutterFlange="SHUTTER_LOW"
 #for pulse on close shutter (inverted logic)
-ShutterFlange="SHUTTER_HIGH"
+#ShutterFlange="SHUTTER_HIGH"
 
 SIGNAL_GPIO=11
 PPS_GPIO=18
+TRIP_GPIO=4
+TRIP_WAVE_REF_GPIO=22
 
 #some functions used in several places
 def getSystemClockData():
