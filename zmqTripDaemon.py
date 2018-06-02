@@ -52,6 +52,7 @@ def sendWave(init=False):
 	print lastSecondTicks
 	pulse=20000
 	preamble=0
+	'''
 	if init or lastSecondTicks==0 :
 		wavelength=1000000
 		print "sendWave init"
@@ -60,11 +61,13 @@ def sendWave(init=False):
 	if wavelength>=1100000:
 		print "PPS restart. "
 		wavelength=1000000
-	postamble=(wavelength-pulse)
+	'''
+	wavelength=1000000-ppm
+	postamble=(wavelength-pulse)-slash
 	print TRIP_WAVE_REF_GPIO,preamble,pulse,postamble		
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	wid= pi.wave_create()
-	print "WID:",wid
+	print "WID:",wid,ppm
 	pi.wave_send_using_mode(wid, pigpio.WAVE_MODE_ONE_SHOT_SYNC)
 	if wid>=9:
 		for i in range(10):
@@ -72,13 +75,14 @@ def sendWave(init=False):
 	#checkWaveBuffer()
 
 def getWaveTick(gpio, level, tick):
-	global waveTick,slash
+	global waveTick,slash,ppm
+	wavelength=1000000-ppm
 	waveTick=tick
-	slash=pigpio.tickDiff(RTCtick,waveTick)
+	slash=(pigpio.tickDiff(RTCtick,waveTick) % wavelength)
 	print slash
-	if slash>=1100000:
+	if slash >=600000:
 		print "PPS restart. "
-		slash=0
+		slash=(slash-wavelength)/6
 	#print "WaveTick",waveTick
 	sendWave()
 
@@ -107,6 +111,8 @@ def discipline(gpio, level, tick):
 	RTCsecond=int(round(now))
 	#print (now,RTCsecond,RTCtick,tick,diff,lastSecondTicks)
 	RTCtick=tick
+	if not pi.wave_tx_busy():
+		sendWave(True)	
 
 
 	
@@ -180,7 +186,6 @@ if __name__ == '__main__':
 	pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
-	sendWave(True)
 	while True:
  		time.sleep(1)
 
