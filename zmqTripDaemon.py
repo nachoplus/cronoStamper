@@ -14,11 +14,13 @@ import json
 
 from config import *
 
+TRIP_WAVE_REF_GPIO=4
 
 RTCsecond=0
 RTCtick=0
 waveTick=0
 lastSecondTicks=0
+slash=0
 
 ppm=0
 lastHIGH=0
@@ -35,27 +37,50 @@ def checkWaveBuffer():
 	CBS=pi.wave_get_cbs()
 	Pulse=pi.wave_get_pulses()
 	Micros=pi.wave_get_micros()
-	print "CBS Pulses, Micros (ACTUAL/MAX)",CBS,maxCBS,Pulse,maxPulse,Micros,maxMicros
+	print "CBS, Pulses, Micros:",CBS,'/',maxCBS,Pulse,'/',maxPulse,Micros,'/',maxMicros
 
 def defwave(gpio,preamble,pulse,postamble):
 	syncwave=[]	
-	syncwave.append(pigpio.pulse(0, 1<<gpio, preamble))
-	syncwave.append(pigpio.pulse(1<<gpio,0, pulse))
-	syncwave.append(pigpio.pulse(0, 1<<gpio, postamble))
-
+	syncwave.append(pigpio.pulse(0,1 << gpio, preamble))
+	syncwave.append(pigpio.pulse(1 << gpio,0, pulse))
+	syncwave.append(pigpio.pulse(0, 1 << gpio, postamble))
 	pi.wave_add_generic(syncwave)
 
 
-def sendWave():
-	defwave(TRIP_WAVE_REF_GPIO,1000000,100000,9900000)
+def sendWave(init=False):
+	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash
+	print lastSecondTicks
+	pulse=20000
+	preamble=0
+	if init or lastSecondTicks==0 :
+		wavelength=1000000
+		print "sendWave init"
+	else:
+		wavelength=lastSecondTicks
+	if wavelength>=1100000:
+		print "PPS restart. "
+		wavelength=1000000
+	postamble=(wavelength-pulse)
+	print TRIP_WAVE_REF_GPIO,preamble,pulse,postamble		
+	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	wid= pi.wave_create()
+	print "WID:",wid
 	pi.wave_send_using_mode(wid, pigpio.WAVE_MODE_ONE_SHOT_SYNC)
-	checkWaveBuffer()
+	if wid>=9:
+		for i in range(10):
+			pi.wave_delete(i)
+	#checkWaveBuffer()
 
 def getWaveTick(gpio, level, tick):
-	global waveTick
+	global waveTick,slash
 	waveTick=tick
-	print "WaveTick",waveTick
+	slash=pigpio.tickDiff(RTCtick,waveTick)
+	print slash
+	if slash>=1100000:
+		print "PPS restart. "
+		slash=0
+	#print "WaveTick",waveTick
+	sendWave()
 
 
 #get the PLL system clock correction in PPM
@@ -71,19 +96,18 @@ def getPPM():
 #use PPS signal interrupt to get tick:UTCtime point
 def discipline(gpio, level, tick):
 	global RTCsecond,RTCtick,ppm,lastSecondTicks
-	diff=pigpio.tickDiff(RTCtick,tick)
+	lastSecondTicks=pigpio.tickDiff(RTCtick,tick)
 	now=time.time()
 	getPPM()
 	#trying to avoid spurius signals
 	#not update if there is less than 0.9999 seconds
-	if diff <999900:
-		print "Spuck!",diff
+	if lastSecondTicks <999900:
+		print "Spuck!",lastSecondTicks
 		return
 	RTCsecond=int(round(now))
-	lastSecondTicks=RTCtick-tick
-	print (now,RTCsecond,RTCtick,tick,diff,lastSecondTicks)
+	#print (now,RTCsecond,RTCtick,tick,diff,lastSecondTicks)
 	RTCtick=tick
-	sendWave()
+
 
 	
 
@@ -150,12 +174,15 @@ if __name__ == '__main__':
 	socket.bind("tcp://*:%s" % zmqTripPort)
 	getSystemClockData()
 	pi.wave_clear()
+	pi.set_mode(TRIP_WAVE_REF_GPIO,pigpio.OUTPUT)
 	print pi.get_mode(TRIP_WAVE_REF_GPIO), pi.get_mode(PPS_GPIO)
 	pi.set_pull_up_down(TRIP_WAVE_REF_GPIO, pigpio.PUD_DOWN)
 	pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
-	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.EITHER_EDGE, getWaveTick)
+	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
+	sendWave(True)
 	while True:
-	    time.sleep(1)
+ 		time.sleep(1)
+
 
 
