@@ -1,9 +1,7 @@
 #!/usr/bin/python
 '''
-Get the timestamp of SIGNAL activation and 
-send a msg througth zmq.PUB
-
-Nacho Mas January-2017
+Trip a programe trigger signal
+Nacho Mas June-2018
 '''
 import pigpio
 import time
@@ -61,13 +59,16 @@ def sendWave():
 	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash
 	pulse=100000
 	preamble=0
-	wavelength=1000000
+	wavelength=1000000-ppm
 	postamble=(wavelength-pulse)-slash
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	if trip():
-		preamble=(RTCtrip-int(round(RTCtrip,0)))*(wavelength)
-		print "TRIP",preamble,RTCsecond
-		defwave(TRIP_GPIO,preamble,pulse,postamble-preamble)
+		preamble=(RTCtrip-int(RTCtrip))*(wavelength)+5
+		postamble=(wavelength-pulse)-slash-preamble
+		if postamble<0:
+			postamble=0
+		print "TRIP",preamble,pulse,postamble,RTCsecond
+		defwave(TRIP_GPIO,preamble,pulse,postamble)
 	wid= pi.wave_create()
 	#print lastSecondTicks,"WID:",wid,ppm,TRIP_WAVE_REF_GPIO,preamble,pulse,postamble,wavelength
 	pi.wave_send_using_mode(wid, pigpio.WAVE_MODE_ONE_SHOT_SYNC)
@@ -89,7 +90,7 @@ def getWaveTick(gpio, level, tick):
 	else:
 		slash=0
 	onetwo=not onetwo
-	print "Slash:",offset,slash,ticks2unixUTC(tick)
+	print "Slash:",offset,slash,ticks2unixUTC(tick),ppm
 	#print "WaveTick",waveTick
 	#checkWaveBuffer()
 	sendWave()
@@ -119,13 +120,12 @@ def discipline(gpio, level, tick):
 	RTCsecond=int(round(now))
 	#print (now,RTCsecond,RTCtick,tick,diff,lastSecondTicks)
 	RTCtick=tick
+	# 
 	if not pi.wave_tx_busy():
 		sendWave()	
 		print "WAVE END!!"
 
 
-
-	
 
 #corrected RTCsecond,RTCtick and ppm 
 def ticks2unixUTC(tick):
@@ -134,7 +134,7 @@ def ticks2unixUTC(tick):
 	#print RTCsecond,RTCtick,tick,tickOffset
 	bias=ppm*(tickOffset/1000000.)
 	UTC=float(RTCsecond)+(tickOffset+bias)/1000000.
-	#print (RTCsecond,ppm,tick,tickOffset,pllOffset,bias,UTC)
+	#print (RTCsecond,ppm,tick,tickOffset,bias,UTC)
 	return UTC
 
 #get UTC timestamp for the incoming pulse
@@ -186,24 +186,29 @@ def unixTime2MJD(unixtime):
 
 if __name__ == '__main__':
 	context = zmq.Context()
-	socket = context.socket(zmq.PUB)
+	socket = context.socket(zmq.REP)
 	socket.bind("tcp://*:%s" % zmqTripPort)
 	getSystemClockData()
 	pi.wave_clear()
 	pi.set_mode(TRIP_WAVE_REF_GPIO,pigpio.OUTPUT)
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
-	pi.set_pull_up_down(TRIP_WAVE_REF_GPIO, pigpio.PUD_DOWN)
-	pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
-	pi.set_pull_up_down(TRIP_GPIO, pigpio.PUD_DOWN)
-	print pi.get_mode(TRIP_WAVE_REF_GPIO), pi.get_mode(TRIP_GPIO), pi.get_mode(PPS_GPIO)
+	#pi.set_pull_up_down(TRIP_WAVE_REF_GPIO, pigpio.PUD_DOWN)
+	#pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
+	#pi.set_pull_up_down(TRIP_GPIO, pigpio.PUD_DOWN)
+	#print pi.get_mode(TRIP_WAVE_REF_GPIO), pi.get_mode(TRIP_GPIO), pi.get_mode(PPS_GPIO)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
 	sendWave()
 	now=time.time()
-	RTCtrip=int(round(now))+5.123456
-	print RTCtrip,unixTime2date(RTCtrip)
+	#RTCtrip=int(round(now))+10.999990
 	while True:
- 		time.sleep(1)
-
+	    	#  Wait for next request from client
+	    	message = socket.recv()
+		RTCtrip	=float(message)
+		print RTCtrip
+		print("Trip set: %s" % message)
+		time.sleep(0.1)
+		#  Send reply back to client
+		socket.send(unixTime2date(RTCtrip))
 
 
