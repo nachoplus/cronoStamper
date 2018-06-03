@@ -200,13 +200,12 @@ if __name__ == '__main__':
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
 	sendWave()
 	now=time.time()
-	#RTCtrip=int(round(now))+10.999990
+	RTCtrip=int(round(now))+10.001
 	while True:
 	    	#  Wait for next request from client
 	    	message = socket.recv()
 		RTCtrip	=float(message)
-		print RTCtrip
-		print("Trip set: %s" % message)
+		print RTCtrip,"Trip set: %s" %  unixTime2date(RTCtrip)
 		time.sleep(0.1)
 		#  Send reply back to client
 		socket.send(unixTime2date(RTCtrip))
