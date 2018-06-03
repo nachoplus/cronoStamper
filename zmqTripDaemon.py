@@ -14,26 +14,36 @@ import json
 
 from config import *
 
-TRIP_WAVE_REF_GPIO=4
 
 RTCsecond=0
 RTCtick=0
 waveTick=0
 lastSecondTicks=0
 slash=0
+RTCtrip=0
 
 ppm=0
 lastHIGH=0
 lastLOW=0
 
+onetwo=True
+
 pi=pigpio.pi()
 
+def trip():
+	global RTCtrip,RTCsecond
+	delta=RTCtrip-ticks2unixUTC(waveTick)
+	print "RTC:",RTCtrip,RTCsecond,delta
+	if delta>=1. and delta<2. :
+		print "FIRE!"
+		return True
+	else:
+		return False
 
 def checkWaveBuffer():
 	maxCBS=pi.wave_get_max_cbs()
 	maxPulse=pi.wave_get_max_pulses()
 	maxMicros=pi.wave_get_max_micros()
-
 	CBS=pi.wave_get_cbs()
 	Pulse=pi.wave_get_pulses()
 	Micros=pi.wave_get_micros()
@@ -47,43 +57,41 @@ def defwave(gpio,preamble,pulse,postamble):
 	pi.wave_add_generic(syncwave)
 
 
-def sendWave(init=False):
+def sendWave():
 	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash
-	print lastSecondTicks
-	pulse=20000
+	pulse=100000
 	preamble=0
-	'''
-	if init or lastSecondTicks==0 :
-		wavelength=1000000
-		print "sendWave init"
-	else:
-		wavelength=lastSecondTicks
-	if wavelength>=1100000:
-		print "PPS restart. "
-		wavelength=1000000
-	'''
-	wavelength=1000000-ppm
+	wavelength=1000000
 	postamble=(wavelength-pulse)-slash
-	print TRIP_WAVE_REF_GPIO,preamble,pulse,postamble		
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
+	if trip():
+		preamble=(RTCtrip-int(round(RTCtrip,0)))*(wavelength)
+		print "TRIP",preamble,RTCsecond
+		defwave(TRIP_GPIO,preamble,pulse,postamble-preamble)
 	wid= pi.wave_create()
-	print "WID:",wid,ppm
+	#print lastSecondTicks,"WID:",wid,ppm,TRIP_WAVE_REF_GPIO,preamble,pulse,postamble,wavelength
 	pi.wave_send_using_mode(wid, pigpio.WAVE_MODE_ONE_SHOT_SYNC)
-	if wid>=9:
-		for i in range(10):
+	if wid>=5:
+		for i in range(6):
 			pi.wave_delete(i)
 	#checkWaveBuffer()
 
 def getWaveTick(gpio, level, tick):
-	global waveTick,slash,ppm
-	wavelength=1000000-ppm
+	global waveTick,slash,ppm,onetwo
+	wavelength=1000000
 	waveTick=tick
-	slash=(pigpio.tickDiff(RTCtick,waveTick) % wavelength)
-	print slash
-	if slash >=600000:
-		print "PPS restart. "
-		slash=(slash-wavelength)/6
+	offset=(pigpio.tickDiff(RTCtick,waveTick) % wavelength)
+	print "-"
+	if offset >=600000:
+		offset=(offset-wavelength)
+	if onetwo:
+		slash=offset
+	else:
+		slash=0
+	onetwo=not onetwo
+	print "Slash:",offset,slash,ticks2unixUTC(tick)
 	#print "WaveTick",waveTick
+	#checkWaveBuffer()
 	sendWave()
 
 
@@ -112,7 +120,9 @@ def discipline(gpio, level, tick):
 	#print (now,RTCsecond,RTCtick,tick,diff,lastSecondTicks)
 	RTCtick=tick
 	if not pi.wave_tx_busy():
-		sendWave(True)	
+		sendWave()	
+		print "WAVE END!!"
+
 
 
 	
@@ -121,7 +131,7 @@ def discipline(gpio, level, tick):
 def ticks2unixUTC(tick):
 	global RTCsecond,RTCtick,ppm
 	tickOffset=pigpio.tickDiff(RTCtick, tick)
-	print RTCsecond,RTCtick,tick,tickOffset
+	#print RTCsecond,RTCtick,tick,tickOffset
 	bias=ppm*(tickOffset/1000000.)
 	UTC=float(RTCsecond)+(tickOffset+bias)/1000000.
 	#print (RTCsecond,ppm,tick,tickOffset,pllOffset,bias,UTC)
@@ -181,11 +191,17 @@ if __name__ == '__main__':
 	getSystemClockData()
 	pi.wave_clear()
 	pi.set_mode(TRIP_WAVE_REF_GPIO,pigpio.OUTPUT)
-	print pi.get_mode(TRIP_WAVE_REF_GPIO), pi.get_mode(PPS_GPIO)
+	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
 	pi.set_pull_up_down(TRIP_WAVE_REF_GPIO, pigpio.PUD_DOWN)
 	pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
+	pi.set_pull_up_down(TRIP_GPIO, pigpio.PUD_DOWN)
+	print pi.get_mode(TRIP_WAVE_REF_GPIO), pi.get_mode(TRIP_GPIO), pi.get_mode(PPS_GPIO)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
+	sendWave()
+	now=time.time()
+	RTCtrip=int(round(now))+5.123456
+	print RTCtrip,unixTime2date(RTCtrip)
 	while True:
  		time.sleep(1)
 
