@@ -19,8 +19,10 @@ waveTick=0
 lastSecondTicks=0
 slash=0
 RTCtrip=0
+RTCtripList=[]
 
 ppm=0
+pllOffset=0
 lastHIGH=0
 lastLOW=0
 
@@ -29,10 +31,20 @@ onetwo=True
 pi=pigpio.pi()
 
 def trip():
-	global RTCtrip,RTCsecond
+	global RTCtripList,RTCsecond,RTCtrip
+	if len(RTCtripList)==0:
+		return False
+	try:
+		while RTCtripList[0]<=ticks2unixUTC(waveTick)+1:
+			RTCtripList.remove(RTCtripList[0])
+	except:
+		print "Trip list empty"
+	if len(RTCtripList)==0:
+		return False
+	RTCtrip=RTCtripList[0]
 	delta=RTCtrip-ticks2unixUTC(waveTick)
-	print "RTC:",RTCtrip,RTCsecond,delta
 	if delta>=1. and delta<2. :
+		print "RTC:",RTCtrip,RTCsecond,delta
 		print "FIRE!"
 		return True
 	else:
@@ -56,10 +68,10 @@ def defwave(gpio,preamble,pulse,postamble):
 
 
 def sendWave():
-	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash
+	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash,pllOffset
 	pulse=100000
-	preamble=0
 	wavelength=1000000-ppm
+	preamble=0
 	postamble=(wavelength-pulse)-slash
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	if trip():
@@ -78,19 +90,19 @@ def sendWave():
 	#checkWaveBuffer()
 
 def getWaveTick(gpio, level, tick):
-	global waveTick,slash,ppm,onetwo
-	wavelength=1000000
+	global waveTick,slash,ppm,onetwo,pllOffset
+	wavelength=1000000-ppm
 	waveTick=tick
 	offset=(pigpio.tickDiff(RTCtick,waveTick) % wavelength)
 	print "-"
 	if offset >=600000:
 		offset=(offset-wavelength)
 	if onetwo:
-		slash=offset
+		slash=round(offset)
 	else:
 		slash=0
 	onetwo=not onetwo
-	print "Slash:",offset,slash,ticks2unixUTC(tick),ppm
+	print "Slash:",ppm,slash,ticks2unixUTC(tick),round(offset)
 	#print "WaveTick",waveTick
 	#checkWaveBuffer()
 	sendWave()
@@ -98,9 +110,10 @@ def getWaveTick(gpio, level, tick):
 
 #get the PLL system clock correction in PPM
 def getPPM():
-	global ppm
+	global ppm,pllOffset
 	clkData=getSystemClockData()
        	ppm=float(clkData['ppm'])
+       	pllOffset=float(clkData['pllOffset'])
 
 
 
@@ -199,15 +212,22 @@ if __name__ == '__main__':
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
 	sendWave()
-	now=time.time()
-	RTCtrip=int(round(now))+10.001
+	#now=time.time()
+	#RTCtrip=int(round(now))+10.001
 	while True:
 	    	#  Wait for next request from client
 	    	message = socket.recv()
-		RTCtrip	=float(message)
-		print RTCtrip,"Trip set: %s" %  unixTime2date(RTCtrip)
-		time.sleep(0.1)
-		#  Send reply back to client
-		socket.send(unixTime2date(RTCtrip))
+		cmds = message.split(' ')
+		if len(cmds)==2:
+			cmd=cmds[0]
+			value=cmds[1]
+		else:
+			cmd=cmds[0]
+		if cmd=='UNIXTIME':
+			RTCtripList.append(float(value))
+			RTCtripList.sort()
+		#print RTCtripList
+		socket.send('OK')
+		time.sleep(0.01)
 
 
