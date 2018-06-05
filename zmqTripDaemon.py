@@ -1,6 +1,6 @@
 #!/usr/bin/python
 '''
-Trip a programe trigger signal
+Trip a preprogramed trigger signal
 Nacho Mas June-2018
 '''
 import pigpio
@@ -11,7 +11,6 @@ import commands
 import json
 
 from config import *
-
 
 RTCsecond=0
 RTCtick=0
@@ -66,7 +65,6 @@ def defwave(gpio,preamble,pulse,postamble):
 	syncwave.append(pigpio.pulse(0, 1 << gpio, postamble))
 	pi.wave_add_generic(syncwave)
 
-
 def sendWave():
 	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash,pllOffset
 	pulse=100000
@@ -107,16 +105,12 @@ def getWaveTick(gpio, level, tick):
 	#checkWaveBuffer()
 	sendWave()
 
-
 #get the PLL system clock correction in PPM
 def getPPM():
 	global ppm,pllOffset
 	clkData=getSystemClockData()
        	ppm=float(clkData['ppm'])
-       	pllOffset=float(clkData['pllOffset'])
-
-
-
+    	pllOffset=float(clkData['pllOffset'])
 
 #get data to correlate system time with the CPU ticks
 #use PPS signal interrupt to get tick:UTCtime point
@@ -138,9 +132,6 @@ def discipline(gpio, level, tick):
 		sendWave()	
 		print "WAVE END!!"
 
-
-
-#corrected RTCsecond,RTCtick and ppm 
 def ticks2unixUTC(tick):
 	global RTCsecond,RTCtick,ppm
 	tickOffset=pigpio.tickDiff(RTCtick, tick)
@@ -150,46 +141,6 @@ def ticks2unixUTC(tick):
 	#print (RTCsecond,ppm,tick,tickOffset,bias,UTC)
 	return UTC
 
-#get UTC timestamp for the incoming pulse
-def GPIOshutter(gpio, level, tick):
-	global lastHIGH,lastLOW
-	unixUTC=ticks2unixUTC(tick)
-	if level == 1:
-		#INVERTED LOGIC
-		#Inform when shutter signal goes to HIGH.
-		#start time = lastLOW
-		#Pulse timespan from last HIGH flange
-		topic="SHUTTER_HIGH"
-		lastHIGH=unixUTC
-		pulse=unixUTC-lastLOW
-		unixUTC_= lastLOW
-	else:
-		#DIRECT LOGIC
-		#Inform when shutter signal goes to HIGH.
-		#start time = lastHIGH
-		#Pulse timespan from last HICH flange
-		topic="SHUTTER_LOW"
-		lastLOW=unixUTC
-		pulse=unixUTC-lastHIGH
-		unixUTC_= lastHIGH
-
-	pulse=round(pulse,6)
-	dateUTC=unixTime2date(unixUTC_)
-	MJD=unixTime2MJD(unixUTC_)
-	msg = {'tick':tick,'level':level,'unixUTC':unixUTC_,'dateUTC':dateUTC,'MJD':MJD,'pulse':pulse}
-	socket.send(mogrify(topic,msg))
-
-	if debug:
-		if level == 1:
-			print "HIGH:",
-		else:
-			print "LOW: ",
-		print msg
-		print unixTime2date(unixUTC)
-		print "%.12f" % unixTime2MJD(unixUTC)
-
-
-
 def unixTime2date(unixtime):
 	d = str(datetime.datetime.fromtimestamp(unixtime))
 	return d
@@ -197,7 +148,69 @@ def unixTime2date(unixtime):
 def unixTime2MJD(unixtime):
 	return ( unixtime / 86400.0 ) + 2440587.5 - 2400000.5
 
+class cmdProcesor:
+	def __init__(self):
+		self.CMDs={ 
+		"UNIXTIME": self.cmd_alarmUnixTime,  \
+  		"MJD": self.cmd_alarmMJD,  \
+  		"DATE": self.cmd_alarmDate,  \
+  		"CLEAR": self.cmd_clearAlarms,  \
+  		"LIST": self.cmd_listAlarms,  \
+  		"help": self.cmd_help, \
+  		"?": self.cmd_help
+		}
+
+	def cmd(self,cmd):
+                for c in self.CMDs.keys():
+			l=len(c)
+			if (cmd[:l]==c):
+				arg=cmd[l:].strip()
+				return self.CMDs[c](arg)
+				break
+		error="ERROR. Command not implemented:",cmd
+		return error
+
+	def cmd_help(self,arg):
+		response='\n'.join(self.CMDs.keys())
+		return "OK. Available commands:\n"+response
+
+	def cmd_alarmUnixTime(self,arg):
+		global RTCtripList 
+		c=arg.split()
+		time=c[0]
+		RTCtripList.append(float(time))
+		RTCtripList.sort()
+		return "OK. New alarm set at unixtime:"+time
+
+	def cmd_alarmMJD(self,arg):
+		c=arg.split()
+		mjdtime=c[0]
+		unixtime=(mjd - 2440587.5 + 2400000.5)*86400.0
+		return self.cmd_alarmUnixTime(time)
+
+	def cmd_alarmDate(self,arg):
+		try:
+			date = datetime.datetime.strptime(arg, '%Y-%m-%d %H:%M:%S.%f')
+		except:
+			return "ERROR. Bad date. Expected format '%Y-%m-%d %H:%M:%S.%f'"
+		return self.cmd_alarmUnixTime(date.total_seconds())
+
+	def cmd_listAlarms(self,arg):
+		global RTCtripList
+		d=[]
+		for a in RTCtripList:
+			d.append(str(datetime.datetime.fromtimestamp(a)))
+		response='\n'.join(d)
+		return "OK.Alarm list:\n"+response
+
+	def cmd_clearAlarms(self,arg):
+		global RTCtripList
+		RTCtripList=[]
+		return "OK. All alarms cleared."
+
+
 if __name__ == '__main__':
+	processor=cmdProcesor()
 	context = zmq.Context()
 	socket = context.socket(zmq.REP)
 	socket.bind("tcp://*:%s" % zmqTripPort)
@@ -205,29 +218,16 @@ if __name__ == '__main__':
 	pi.wave_clear()
 	pi.set_mode(TRIP_WAVE_REF_GPIO,pigpio.OUTPUT)
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
-	#pi.set_pull_up_down(TRIP_WAVE_REF_GPIO, pigpio.PUD_DOWN)
-	#pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
-	#pi.set_pull_up_down(TRIP_GPIO, pigpio.PUD_DOWN)
-	#print pi.get_mode(TRIP_WAVE_REF_GPIO), pi.get_mode(TRIP_GPIO), pi.get_mode(PPS_GPIO)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
 	sendWave()
-	#now=time.time()
-	#RTCtrip=int(round(now))+10.001
+
 	while True:
 	    	#  Wait for next request from client
 	    	message = socket.recv()
-		cmds = message.split(' ')
-		if len(cmds)==2:
-			cmd=cmds[0]
-			value=cmds[1]
-		else:
-			cmd=cmds[0]
-		if cmd=='UNIXTIME':
-			RTCtripList.append(float(value))
-			RTCtripList.sort()
-		#print RTCtripList
-		socket.send('OK')
+		print message
+		response=processor.cmd(message)
+		socket.send(response)
 		time.sleep(0.01)
 
 

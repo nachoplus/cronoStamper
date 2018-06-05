@@ -31,6 +31,7 @@ zmqShutterPort = 5556
 zmqGPSPort = 5557
 zmqTripPort = 5558
 socketsPort = 9999
+TripPort = 9998
 httpPort= 5000
 
 #socat command have to be launch before:

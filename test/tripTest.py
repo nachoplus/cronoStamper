@@ -37,11 +37,11 @@ socket.connect("tcp://cronostamper:%s" % zmqTripPort)
 
 #  Do 10 requests, waiting each time for a response
 RTCtripList=[]
-for request in range(1000):
+for request in range(100):
     r=random.random()
     if r>0.90:
 	r=0.90
-    #RTCtrip=str(int(time.time())+2+0.15)
+    #RTCtrip=int(time.time())+2+request+r*10
     RTCtrip=int(time.time())+2.+request+r
     strRTCtrip= "%0.6f" % RTCtrip
     RTCtripList.append(RTCtrip)
@@ -49,7 +49,9 @@ for request in range(1000):
     #time.sleep(1)	
     message = socket.recv()
 
-for RTCtrip in RTCtripList:
+print sorted(RTCtripList)
+
+for RTCtrip in sorted(RTCtripList):
     topic, msg  = demogrify(socketS.recv())
     unixTimeStamp=datetime.datetime.fromtimestamp(msg['unixUTC'])
     alarm=datetime.datetime.fromtimestamp(float(RTCtrip))

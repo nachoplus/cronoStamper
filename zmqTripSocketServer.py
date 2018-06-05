@@ -1,5 +1,4 @@
 #!/usr/bin/python
-exit(0)
 '''
 TRIP Sockets server- 
 On connect send a string with the 
@@ -9,28 +8,28 @@ Then close the sockets
 Nacho Mas june-2018
 '''
 
-import zmq
-import time
-import datetime
 import socket
 import sys
-import threading
+import select
+import time
+from thread import *
+import zmq
 from config import *
 
 
+context = zmq.Context()
 
  
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = socketsPort # Arbitrary non-privileged port
+ # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print 'Starting CronoStamper TRIP Sockets Server.'
-print 'Socket created'
+print 'Starting Trip TCP server'
+print 'Socket created',HOST+":",str(TripPort)
 
- 
 #Bind socket to local host and port
 try:
-    s.bind((HOST, PORT))
+    s.bind((HOST, TripPort))
 except socket.error as msg:
     print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
     sys.exit()
@@ -38,96 +37,82 @@ except socket.error as msg:
 print 'Socket bind complete'
  
 #Start listening on socket
-s.listen(10)
+s.listen(1)
 print 'Socket now listening'
  
-nthreads=0
 
+
+#End='something useable as an end marker'
+def recv_end(conn):
+    End='#'
+    total_data=[]
+    while True:
+	    time.sleep(0.05)
+    	    data=''
+
+	    try:	
+            	data=conn.recv(1)
+	    except:
+		print "socket close"
+		cmd="SOCKET_CLOSE"	
+		break
+
+	    if data=='':
+		cmd="SOCKET_CLOSE"	
+		break
+
+            if End in data:
+                total_data.append(data[:data.find(End)])
+		cmd=''.join(total_data).replace('\n','').replace('\r','')
+		if len(cmd)==0:
+			continue
+		else:
+			break
+	    else:
+            	total_data.append(data)
+
+    #print "CMD parse:",repr(cmd)
+    return cmd
 
 #Function for handling connections. This will be used to create threads
-#Important: Each thread has to have its own zmq sockets to avoid data corruption
-def clientthread(conn,addr,n):
-    global nthreads
-    print str(n),str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads
+def clientthread(conn):
+    RUN=True
+    #  Socket to talk to ZMQserver
+    zmqSocket = context.socket(zmq.REQ)
+    zmqSocket.connect("tcp://localhost:%s" % zmqTripPort)
 
-    #ZMQ context
-    context = zmq.Context()
-
-    #Subscribe to shutter zmq queue
-    topicfilter = ShutterFlange
-    socketShutter = context.socket(zmq.SUB)
-    #only one message (do not work with the stock version of zmq, works from ver 4.1.4)
-    socketShutter.setsockopt(zmq.CONFLATE, 1)
-    socketShutter.connect ("tcp://localhost:%s" % zmqShutterPort)
-    socketShutter.setsockopt(zmq.SUBSCRIBE, topicfilter)
-
-    #Subscribe to gps and clock zmq queue
-    GPStopicfilter = "GPS"
-    socketGPS = context.socket(zmq.SUB)
-    #CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
-    socketGPS.setsockopt(zmq.CONFLATE, 1)
-    socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
-    socketGPS.setsockopt(zmq.SUBSCRIBE, GPStopicfilter)
-
-    lastGPS={}
-
-
-    #Sending message to connected client
-    #conn.send('OK.CronoStamper socket server.\n') #send only takes string
-     
+   
     #infinite loop so that function do not terminate and thread do not end.
-    while True:
-		#get shutter time
-		m= socketShutter.recv()
-		topic, msg  = demogrify(m)
-
-		#try get GPS and time data. If fail return last avalilable
-		try:
-			GPSm= socketGPS.recv(flags=zmq.NOBLOCK)
-			topic, GPSmsg  = demogrify(GPSm)
-			lastGPS=GPSmsg
-			msgGPS = GPSmsg
-		except:
-			msgGPS = lastGPS
+    while RUN:
+	    	cmd=recv_end(conn)
+		print cmd
+		if cmd == "SOCKET_CLOSE":
+			break
+		#print "<-",cmd
+		zmqSocket.send(cmd)
+		reply=zmqSocket.recv()
+		#print "->",reply
+    		conn.send(str(reply)+'\n')
 
 
-		#format the reply string
-		ppsOK=0
-		clkError=9999.
-		try:
-			if msgGPS['ppsOK']:
-				ppsOK=1
-			clkError=float(msgGPS['ClkError'])
-		except:
-			pass
-		reply = "%s %010.6f %01.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],ppsOK,clkError)
-		#catch the send reply to manage if client close the socket
-		try:
-    			conn.sendall(reply)
-			print str(n),reply,	
-		except:     
-			#came out of loop. close socket and thread
-			nthreads-=1
-		    	print str(n),str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads
-		    	conn.close()
-			socketShutter.close()
-			socketGPS.close()
-		    	break
-		
-
-
-
-
+    #came out of loop
+    #conn.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
+    conn.close()
+    print "Disconnecting.."
  
 #now keep talking with the client
-while True:
+RUN=True
+while RUN:
+  try:
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
-
-    nthreads+=1     
+    print 'Connected with ' + addr[0] + ':' + str(addr[1])
+     
     #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-    t = threading.Thread(target=clientthread,args=(conn,addr,nthreads,))
-    t.start()
+    start_new_thread(clientthread ,(conn,))
 
-
+  except:
+    RUN=False
+	
 s.close()
+
