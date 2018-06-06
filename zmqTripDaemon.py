@@ -174,32 +174,44 @@ class cmdProcesor:
 		response='\n'.join(self.CMDs.keys())
 		return "OK. Available commands:\n"+response
 
+	def alarm_str(self,unixtime):
+		response=str(unixTime2date(unixtime))+" UNIX:"+str(unixtime)+" MJD:"+str(unixTime2MJD(unixtime))
+		return response
+
+	def set_alarm(self,unixtime):
+		RTCtripList.append(unixtime)
+		RTCtripList.sort()
+		response=self.alarm_str(unixtime)
+		return "OK. New alarm:"+response
+
 	def cmd_alarmUnixTime(self,arg):
 		global RTCtripList 
 		c=arg.split()
 		time=c[0]
-		RTCtripList.append(float(time))
-		RTCtripList.sort()
-		return "OK. New alarm set at unixtime:"+time
+		return self.set_alarm(float(time))
 
 	def cmd_alarmMJD(self,arg):
 		c=arg.split()
-		mjdtime=c[0]
+		mjdtime=float(c[0])
 		unixtime=(mjd - 2440587.5 + 2400000.5)*86400.0
-		return self.cmd_alarmUnixTime(time)
+		return self.set_alarm(unixtime)
 
 	def cmd_alarmDate(self,arg):
 		try:
 			date = datetime.datetime.strptime(arg, '%Y-%m-%d %H:%M:%S.%f')
 		except:
 			return "ERROR. Bad date. Expected format '%Y-%m-%d %H:%M:%S.%f'"
-		return self.cmd_alarmUnixTime(date.total_seconds())
+		#mktime FAIL TO get microseconds
+		unixtime = time.mktime(date.timetuple())
+		print date,unixtime
+		return self.set_alarm(unixtime)
 
 	def cmd_listAlarms(self,arg):
 		global RTCtripList
 		d=[]
 		for a in RTCtripList:
-			d.append(str(datetime.datetime.fromtimestamp(a)))
+			response=self.alarm_str(a)
+			d.append(response)
 		response='\n'.join(d)
 		return "OK.Alarm list:\n"+response
 
@@ -225,7 +237,7 @@ if __name__ == '__main__':
 	while True:
 	    	#  Wait for next request from client
 	    	message = socket.recv()
-		print message
+		print "CMD:",message
 		response=processor.cmd(message)
 		socket.send(response)
 		time.sleep(0.01)

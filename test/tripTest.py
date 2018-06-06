@@ -42,14 +42,15 @@ for request in range(100):
     if r>0.90:
 	r=0.90
     #RTCtrip=int(time.time())+2+request+r*10
-    RTCtrip=int(time.time())+2.+request+r
+    RTCtrip=int(time.time())+2.+request*2+r
     strRTCtrip= "%0.6f" % RTCtrip
     RTCtripList.append(RTCtrip)
     socket.send('UNIXTIME '+strRTCtrip)
     #time.sleep(1)	
     message = socket.recv()
+    print message
 
-print sorted(RTCtripList)
+
 
 for RTCtrip in sorted(RTCtripList):
     topic, msg  = demogrify(socketS.recv())
