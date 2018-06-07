@@ -19,6 +19,7 @@ lastSecondTicks=0
 slash=0
 RTCtrip=0
 RTCtripList=[]
+locus=1000
 
 ppm=0
 pllOffset=0
@@ -66,14 +67,14 @@ def defwave(gpio,preamble,pulse,postamble):
 	pi.wave_add_generic(syncwave)
 
 def sendWave():
-	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash,pllOffset
+	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash,pllOffset,locus
 	pulse=100000
 	wavelength=1000000-ppm
-	preamble=0
-	postamble=(wavelength-pulse)-slash
+	preamble=locus
+	postamble=(wavelength-pulse)-slash-preamble
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	if trip():
-		preamble=(RTCtrip-int(RTCtrip))*(wavelength)+5
+		preamble=(RTCtrip-int(RTCtrip))*(wavelength)
 		postamble=(wavelength-pulse)-slash-preamble
 		if postamble<0:
 			postamble=0
@@ -88,13 +89,14 @@ def sendWave():
 	#checkWaveBuffer()
 
 def getWaveTick(gpio, level, tick):
-	global waveTick,slash,ppm,onetwo,pllOffset
+	global waveTick,slash,ppm,onetwo,pllOffset,locus
 	wavelength=1000000-ppm
 	waveTick=tick
-	offset=(pigpio.tickDiff(RTCtick,waveTick) % wavelength)
+	offset=(pigpio.tickDiff(RTCtick+locus,waveTick) % wavelength)
 	print "-"
 	if offset >=600000:
-		offset=(offset-wavelength)
+		#offset=(offset-wavelength)
+		offset=0
 	if onetwo:
 		slash=round(offset)
 	else:

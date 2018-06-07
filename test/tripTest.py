@@ -41,14 +41,14 @@ for request in range(100):
     r=random.random()
     if r>0.90:
 	r=0.90
-    #RTCtrip=int(time.time())+2+request+r*10
-    RTCtrip=int(time.time())+2.+request*2+r
+    RTCtrip=int(time.time())+2+0.0+request
+    #RTCtrip=int(time.time())+2.+request+r
     strRTCtrip= "%0.6f" % RTCtrip
     RTCtripList.append(RTCtrip)
     socket.send('UNIXTIME '+strRTCtrip)
     #time.sleep(1)	
     message = socket.recv()
-    print message
+    #print message
 
 
 
