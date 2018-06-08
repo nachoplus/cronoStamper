@@ -19,7 +19,7 @@ lastSecondTicks=0
 slash=0
 RTCtrip=0
 RTCtripList=[]
-locus=1000
+locus=100000
 
 ppm=0
 pllOffset=0
@@ -71,7 +71,8 @@ def sendWave():
 	pulse=100000
 	wavelength=1000000-ppm
 	preamble=locus
-	postamble=(wavelength-pulse)-slash-preamble
+	postamble=wavelength-pulse-slash-preamble
+	print lastSecondTicks,preamble,pulse,postamble,wavelength
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	if trip():
 		preamble=(RTCtrip-int(RTCtrip))*(wavelength)
@@ -81,7 +82,7 @@ def sendWave():
 		print "TRIP",preamble,pulse,postamble,RTCsecond
 		defwave(TRIP_GPIO,preamble,pulse,postamble)
 	wid= pi.wave_create()
-	#print lastSecondTicks,"WID:",wid,ppm,TRIP_WAVE_REF_GPIO,preamble,pulse,postamble,wavelength
+	
 	pi.wave_send_using_mode(wid, pigpio.WAVE_MODE_ONE_SHOT_SYNC)
 	if wid>=5:
 		for i in range(6):
@@ -92,11 +93,16 @@ def getWaveTick(gpio, level, tick):
 	global waveTick,slash,ppm,onetwo,pllOffset,locus
 	wavelength=1000000-ppm
 	waveTick=tick
-	offset=(pigpio.tickDiff(RTCtick+locus,waveTick) % wavelength)
-	print "-"
-	if offset >=600000:
-		#offset=(offset-wavelength)
+	#offset=(pigpio.tickDiff(RTCtick+locus,waveTick) % wavelength)
+	offset=pigpio.tickDiff(RTCtick+locus,waveTick) 
+	if offset>=4200000000:
+		offset=-pigpio.tickDiff(waveTick,RTCtick+locus) 
+	print "->OFFSET",offset,RTCtick+locus,waveTick,waveTick-(RTCtick+locus),"<-----"
+
+	if offset >=wavelength-locus:
+		offset=(wavelength-locus-100000)
 		offset=0
+
 	if onetwo:
 		slash=round(offset)
 	else:
@@ -234,7 +240,7 @@ if __name__ == '__main__':
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
-	sendWave()
+	#sendWave()
 
 	while True:
 	    	#  Wait for next request from client
