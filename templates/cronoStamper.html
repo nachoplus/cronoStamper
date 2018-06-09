@@ -39,6 +39,47 @@ var newdarray =  darray.map(function(value,index) { return [value[0]-x0,value[1]
 return newdarray;    
 }
 
+
+
+function updateTrigger() {
+ $.ajax({
+    // the URL for the request
+    url: "/trigger.json",
+ 
+    // the data to send (will be converted to a query string)
+    data: {
+
+    },
+	 
+    // whether this is a POST or GET request
+    type: "GET",
+ 
+    // the type of data we expect back
+    dataType : "json",
+ 
+    // code to run if the request succeeds;
+    // the response is passed to the function
+    success: function( data ) {	
+	$('#NEXT_TRIP').text(data.nextTrip);
+    },
+ 
+    // code to run if the request fails; the raw request and
+    // status codes are passed to the function
+    error: function( xhr, status ) {
+        //alert( "Sorry, there was a problem!" );
+    },
+ 
+    // code to run regardless of success or failure
+    complete: function( xhr, status ) {
+ 
+    }
+    });
+
+    };
+
+
+
+
 function updateShutter() {
  $.ajax({
     // the URL for the request
@@ -270,6 +311,7 @@ function updateGPS() {
 function updater() {
 			updateShutter();
 			updateGPS();
+			updateTrigger();
                    };
 
 $(document).ready(function() {
@@ -356,6 +398,9 @@ $(document).ready(function() {
 <tr><td colspan="2">
 LAST SHUTTER TIME
 </td>
+<tr><td >NEXT TRIP</td><td>
+    <div id="NEXT_TRIP" align="left"></div>
+</td></tr>
 <tr><td >DATE</td><td>
     <div id="DATE" align="left"></div>
 </td></tr>

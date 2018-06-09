@@ -78,6 +78,16 @@ def clkStatus():
 	cmdrst=commands.getstatusoutput(exe)
 	return send_from_directory(directory=path+'/test', filename='clockStats.png')
 
+@app.route('/trigger.json')
+def trigger():
+    zmqSocket = context.socket(zmq.REQ)
+    zmqSocket.connect("tcp://localhost:%s" % zmqTripPort)
+    zmqSocket.send('NEXT')
+    reply=zmqSocket.recv()
+    zmqSocket.close()
+    r={'nextTrip':reply}
+    return jsonify(r)
+
 
 def lastValue():
 	global last

@@ -32,18 +32,19 @@ pi=pigpio.pi()
 
 def trip():
 	global RTCtripList,RTCsecond,RTCtrip
+	margin=0.001000		
 	if len(RTCtripList)==0:
 		return False
 	try:
-		while RTCtripList[0]<=ticks2unixUTC(waveTick)+1:
+		while RTCtripList[0]<=RTCsecond+1-margin:
 			RTCtripList.remove(RTCtripList[0])
 	except:
 		print "Trip list empty"
 	if len(RTCtripList)==0:
 		return False
 	RTCtrip=RTCtripList[0]
-	delta=RTCtrip-ticks2unixUTC(waveTick)
-	if delta>=1. and delta<2. :
+	delta=RTCtrip-RTCsecond
+	if delta>=1-margin and delta<2.-margin :
 		print "RTC:",RTCtrip,RTCsecond,delta
 		print "FIRE!"
 		return True
@@ -72,7 +73,7 @@ def sendWave():
 	wavelength=1000000-ppm
 	preamble=locus
 	postamble=wavelength-pulse-slash-preamble
-	print lastSecondTicks,preamble,pulse,postamble,wavelength
+	#print lastSecondTicks,preamble,pulse,postamble,wavelength
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	if trip():
 		preamble=(RTCtrip-int(RTCtrip))*(wavelength)
@@ -108,7 +109,7 @@ def getWaveTick(gpio, level, tick):
 	else:
 		slash=0
 	onetwo=not onetwo
-	print "Slash:",ppm,slash,ticks2unixUTC(tick),round(offset)
+	#print "Slash:",ppm,slash,ticks2unixUTC(tick),round(offset)
 	#print "WaveTick",waveTick
 	#checkWaveBuffer()
 	sendWave()
@@ -164,6 +165,7 @@ class cmdProcesor:
   		"DATE": self.cmd_alarmDate,  \
   		"CLEAR": self.cmd_clearAlarms,  \
   		"LIST": self.cmd_listAlarms,  \
+  		"NEXT": self.cmd_nextAlarm,  \
   		"help": self.cmd_help, \
   		"?": self.cmd_help
 		}
@@ -222,6 +224,14 @@ class cmdProcesor:
 			d.append(response)
 		response='\n'.join(d)
 		return "OK.Alarm list:\n"+response
+
+	def cmd_nextAlarm(self,arg):
+		global RTCtripList
+		try:
+			response=str(unixTime2date(RTCtripList[0]))
+		except:
+			response='NONE'
+		return response
 
 	def cmd_clearAlarms(self,arg):
 		global RTCtripList
