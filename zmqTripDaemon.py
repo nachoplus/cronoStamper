@@ -88,38 +88,32 @@ def sendWave():
 	if wid>=5:
 		for i in range(6):
 			pi.wave_delete(i)
-	#checkWaveBuffer()
+
 
 def getWaveTick(gpio, level, tick):
-	global waveTick,slash,ppm,onetwo,pllOffset,locus
+	global waveTick,slash,ppm,onetwo,locus
 	wavelength=1000000-ppm
 	waveTick=tick
-	#offset=(pigpio.tickDiff(RTCtick+locus,waveTick) % wavelength)
 	offset=pigpio.tickDiff(RTCtick+locus,waveTick) 
 	if offset>=4200000000:
 		offset=-pigpio.tickDiff(waveTick,RTCtick+locus) 
 	print "->OFFSET",offset,RTCtick+locus,waveTick,waveTick-(RTCtick+locus),"<-----"
-
-	if offset >=wavelength-locus:
-		offset=(wavelength-locus-100000)
-		offset=0
-
+	if offset >=wavelength:
+		print "OFFSET to big. Probably missed PPS signal",offset
+		return
 	if onetwo:
 		slash=round(offset)
 	else:
 		slash=0
 	onetwo=not onetwo
-	#print "Slash:",ppm,slash,ticks2unixUTC(tick),round(offset)
-	#print "WaveTick",waveTick
-	#checkWaveBuffer()
 	sendWave()
 
 #get the PLL system clock correction in PPM
 def getPPM():
-	global ppm,pllOffset
+	global ppm
 	clkData=getSystemClockData()
        	ppm=float(clkData['ppm'])
-    	pllOffset=float(clkData['pllOffset'])
+
 
 #get data to correlate system time with the CPU ticks
 #use PPS signal interrupt to get tick:UTCtime point
@@ -144,7 +138,6 @@ def discipline(gpio, level, tick):
 def ticks2unixUTC(tick):
 	global RTCsecond,RTCtick,ppm
 	tickOffset=pigpio.tickDiff(RTCtick, tick)
-	#print RTCsecond,RTCtick,tick,tickOffset
 	bias=ppm*(tickOffset/1000000.)
 	UTC=float(RTCsecond)+(tickOffset+bias)/1000000.
 	#print (RTCsecond,ppm,tick,tickOffset,bias,UTC)
@@ -177,7 +170,7 @@ class cmdProcesor:
 				arg=cmd[l:].strip()
 				return self.CMDs[c](arg)
 				break
-		error="ERROR. Command not implemented:",cmd
+		error="ERROR. Command not implemented:"+str(cmd)
 		return error
 
 	def cmd_help(self,arg):
@@ -211,8 +204,8 @@ class cmdProcesor:
 			date = datetime.datetime.strptime(arg, '%Y-%m-%d %H:%M:%S.%f')
 		except:
 			return "ERROR. Bad date. Expected format '%Y-%m-%d %H:%M:%S.%f'"
-		#mktime FAIL TO get microseconds
-		unixtime = time.mktime(date.timetuple())
+		#workarround, mktime FAIL TO get microseconds
+		unixtime = time.mktime(date.timetuple())+int(date.strftime('%f'))/1000000.
 		print date,unixtime
 		return self.set_alarm(unixtime)
 
@@ -250,13 +243,14 @@ if __name__ == '__main__':
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
-	#sendWave()
+
 
 	while True:
 	    	#  Wait for next request from client
 	    	message = socket.recv()
-		print "CMD:",message
+		#print "CMD:",message
 		response=processor.cmd(message)
+		#print response
 		socket.send(response)
 		time.sleep(0.01)
 

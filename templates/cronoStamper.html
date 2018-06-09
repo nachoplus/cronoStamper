@@ -378,6 +378,8 @@ $(document).ready(function() {
  
 </HEAD>
 <BODY>
+<table>
+<tr>
     <div align="center">
         <p>
            <a href='https://github.com/nachoplus/cronoStamper'>cronoStamper</a> by N+
@@ -385,7 +387,8 @@ $(document).ready(function() {
 	<h1 >{{ camera.name }}</h1>
 	<h2 id='READY'></h2>
     </div>
-
+</tr>
+</table>
 <table class='container'>
 <tr>
 <td>
@@ -394,11 +397,11 @@ $(document).ready(function() {
 <div id='READY'></div>
 </td>
 <td>
-<table align='center' class='ShutterTime'>
+<table align='center' class='ShutterTime'  >
 <tr><td colspan="2">
-LAST SHUTTER TIME
+SHUTTER
 </td>
-<tr><td >NEXT TRIP</td><td>
+<tr><td >NEXT TRIP</td><td  width="200">
     <div id="NEXT_TRIP" align="left"></div>
 </td></tr>
 <tr><td >DATE</td><td>
@@ -421,7 +424,7 @@ LAST SHUTTER TIME
 <tr><td colspan="2">
 GPS
 </td>
-<tr><td>MODE (0=INIT, 1=NO FIX, 2= 2D FIX, 3 = 3D FIX)</td><td>
+<tr><td>MODE (0=INIT, 1=NO FIX, 2= 2D FIX, 3 = 3D FIX)</td><td width="100">
     <div id="MODE" align="left"></div>
 </td></tr>
 <tr><td>LATITUD</td><td>

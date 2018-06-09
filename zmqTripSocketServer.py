@@ -85,7 +85,7 @@ def clientthread(conn):
     #infinite loop so that function do not terminate and thread do not end.
     while RUN:
 	    	cmd=recv_end(conn)
-		if cmd == "SOCKET_CLOSE" or cmd == "EXIT":
+		if cmd == "SOCKET_CLOSE" or cmd == "EXIT" or cmd == "QUIT":
 			break
 		print "<-",cmd
 		zmqSocket.send(cmd)
