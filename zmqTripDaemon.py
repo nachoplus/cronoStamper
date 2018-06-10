@@ -15,17 +15,13 @@ from config import *
 RTCsecond=0
 RTCtick=0
 waveTick=0
-lastSecondTicks=0
+
 slash=0
 RTCtrip=0
 RTCtripList=[]
 locus=100000
 
 ppm=0
-pllOffset=0
-lastHIGH=0
-lastLOW=0
-
 onetwo=True
 
 pi=pigpio.pi()
@@ -33,10 +29,10 @@ pi=pigpio.pi()
 def trip():
 	global RTCtripList,RTCsecond,RTCtrip
 	margin=0.001000		
-	if len(RTCtripList)==0:
+	if len(RTCtripList)==0 or RTCsecond==0:
 		return False
 	try:
-		while RTCtripList[0]<=RTCsecond+1-margin:
+		while RTCtripList[0]<RTCsecond+1:
 			RTCtripList.remove(RTCtripList[0])
 	except:
 		print "Trip list empty"
@@ -68,12 +64,12 @@ def defwave(gpio,preamble,pulse,postamble):
 	pi.wave_add_generic(syncwave)
 
 def sendWave():
-	global RTCsecond,RTCtick,ppm,lastSecondTicks,slash,pllOffset,locus
+	global RTCsecond,RTCtick,ppm,slash,locus
 	pulse=100000
 	wavelength=1000000-ppm
 	preamble=locus
 	postamble=wavelength-pulse-slash-preamble
-	#print lastSecondTicks,preamble,pulse,postamble,wavelength
+	#print preamble,pulse,postamble,wavelength
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	if trip():
 		preamble=(RTCtrip-int(RTCtrip))*(wavelength)
@@ -91,18 +87,22 @@ def sendWave():
 
 
 def getWaveTick(gpio, level, tick):
-	global waveTick,slash,ppm,onetwo,locus
+	global waveTick,slash,ppm,onetwo,locus,RTCsecond,RTCtick
 	wavelength=1000000-ppm
 	waveTick=tick
 	offset=pigpio.tickDiff(RTCtick+locus,waveTick) 
 	if offset>=4200000000:
 		offset=-pigpio.tickDiff(waveTick,RTCtick+locus) 
 	print "->OFFSET",offset,RTCtick+locus,waveTick,waveTick-(RTCtick+locus),"<-----"
-	if offset >=wavelength:
-		print "OFFSET to big. Probably missed PPS signal",offset
+	if offset >=wavelength*0.9:
+		print "OFFSET to big:",offset," Probably missed PPS signal. Reseting"
+		pi.wave_clear()
+		RTCsecond=0
+		RTCtick=0
+		waveTick=0
 		return
 	if onetwo:
-		slash=round(offset)
+		slash=offset
 	else:
 		slash=0
 	onetwo=not onetwo
@@ -118,7 +118,7 @@ def getPPM():
 #get data to correlate system time with the CPU ticks
 #use PPS signal interrupt to get tick:UTCtime point
 def discipline(gpio, level, tick):
-	global RTCsecond,RTCtick,ppm,lastSecondTicks
+	global RTCsecond,RTCtick,ppm
 	lastSecondTicks=pigpio.tickDiff(RTCtick,tick)
 	now=time.time()
 	getPPM()
@@ -133,7 +133,7 @@ def discipline(gpio, level, tick):
 	# 
 	if not pi.wave_tx_busy():
 		sendWave()	
-		print "WAVE END!!"
+		print "WAVE END!! RESTARTING"
 
 def ticks2unixUTC(tick):
 	global RTCsecond,RTCtick,ppm
@@ -159,7 +159,7 @@ class cmdProcesor:
   		"CLEAR": self.cmd_clearAlarms,  \
   		"LIST": self.cmd_listAlarms,  \
   		"NEXT": self.cmd_nextAlarm,  \
-  		"help": self.cmd_help, \
+  		"HELP": self.cmd_help, \
   		"?": self.cmd_help
 		}
 
@@ -243,7 +243,7 @@ if __name__ == '__main__':
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
-
+        print "INIT: Waiting for a PPS signal."
 
 	while True:
 	    	#  Wait for next request from client
