@@ -170,12 +170,12 @@ class cmdProcesor:
 				arg=cmd[l:].strip()
 				return self.CMDs[c](arg)
 				break
-		error="ERROR. Command not implemented:"+str(cmd)
+		error="ERROR: Command not implemented:"+str(cmd)
 		return error
 
 	def cmd_help(self,arg):
 		response='\n'.join(self.CMDs.keys())
-		return "OK. Available commands:\n"+response
+		return "OK: Available commands:\n"+response
 
 	def alarm_str(self,unixtime):
 		response=str(unixTime2date(unixtime))+" UNIX:"+str(unixtime)+" MJD:"+str(unixTime2MJD(unixtime))
@@ -185,7 +185,7 @@ class cmdProcesor:
 		RTCtripList.append(unixtime)
 		RTCtripList.sort()
 		response=self.alarm_str(unixtime)
-		return "OK. New alarm:"+response
+		return "OK: New alarm:"+response
 
 	def cmd_alarmUnixTime(self,arg):
 		global RTCtripList 
@@ -196,14 +196,14 @@ class cmdProcesor:
 	def cmd_alarmMJD(self,arg):
 		c=arg.split()
 		mjdtime=float(c[0])
-		unixtime=(mjd - 2440587.5 + 2400000.5)*86400.0
+		unixtime=(mjdtime - 2440587.5 + 2400000.5)*86400.0
 		return self.set_alarm(unixtime)
 
 	def cmd_alarmDate(self,arg):
 		try:
 			date = datetime.datetime.strptime(arg, '%Y-%m-%d %H:%M:%S.%f')
 		except:
-			return "ERROR. Bad date. Expected format '%Y-%m-%d %H:%M:%S.%f'"
+			return "ERROR: Bad date. Expected format '%Y-%m-%d %H:%M:%S.%f'"
 		#workarround, mktime FAIL TO get microseconds
 		unixtime = time.mktime(date.timetuple())+int(date.strftime('%f'))/1000000.
 		print date,unixtime
@@ -216,7 +216,7 @@ class cmdProcesor:
 			response=self.alarm_str(a)
 			d.append(response)
 		response='\n'.join(d)
-		return "OK.Alarm list:\n"+response
+		return "OK: Programed alarms:\n"+response
 
 	def cmd_nextAlarm(self,arg):
 		global RTCtripList
@@ -229,7 +229,7 @@ class cmdProcesor:
 	def cmd_clearAlarms(self,arg):
 		global RTCtripList
 		RTCtripList=[]
-		return "OK. All alarms cleared."
+		return "OK: All alarms cleared."
 
 
 if __name__ == '__main__':
