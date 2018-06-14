@@ -4,7 +4,7 @@ __CronoStamper__
 Introduction
 ------------
 
-High precisión timestamping using raspberry GPIO.
+High precisión timestamping/trigger using raspberry GPIO.
 
 It is based on pigpiod great daemon (http://abyz.co.uk/rpi/pigpio/index.html)
 
@@ -16,7 +16,25 @@ Nacho Mas - January 2016
 
 __PORTS__
 ----------
-The signal activation timestamp is available connetting to socket 9999. Telneting to that port return the last signal timestamp and close the connection.
+The Fire signal timestamp is available connetting to socket 9999. Telneting to that port return the last signal timestamp and close the connection.
+
+Port 9998 is the alarm programing server. Valid commands:
+To program a alarma:
+DATE 2018-06-10 22:23:23.123456#
+MJD  float#
+UNIXTIME float#
+
+To delete all the programed alarms:
+CLEAR#
+
+To know what alarms are coming:
+NEXT#
+LIST#
+
+To close the connection:
+QUIT#
+o
+EXIT#
 
 There is a http page showing the status is running on port 5000. Check it to know if GPS/ntp is ready.
 
@@ -37,12 +55,19 @@ TXD |   10 (UART_RXD GPIO15)
 RXD |   8 (UART_TXD GPIO14)
 PPS |   12 (GPIO18)
 
-Trigger signal (probe connector):
+Fire signal (probe connector):
 
 Probe | RPI Pin
 --- | ---
 GND | 25 (GND)
-SIGNAL | 23 (GPIO11)
+SIGNAL | 23 (GPIO11)  (connect throught a 1.2kOhm resistor)
+
+Trip signal (probe connector):
+
+Probe | RPI Pin
+--- | ---
+GND | 9 (GND)
+SIGNAL | 7 (GPIO4)  (connect throught a 1.2kOhm resistor)
 
 
 

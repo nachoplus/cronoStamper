@@ -190,12 +190,18 @@ class cmdProcesor:
 	def cmd_alarmUnixTime(self,arg):
 		global RTCtripList 
 		c=arg.split()
-		time=c[0]
-		return self.set_alarm(float(time))
+		try:
+			unixtime=float(c[0])
+		except:
+			return "ERROR: Bad UNIXTIME date. Expected a float"
+		return self.set_alarm(unixtime)
 
 	def cmd_alarmMJD(self,arg):
 		c=arg.split()
-		mjdtime=float(c[0])
+		try:
+			mjdtime=float(c[0])
+		except:
+			return "ERROR: Bad MJD date. Expected a float"
 		unixtime=(mjdtime - 2440587.5 + 2400000.5)*86400.0
 		return self.set_alarm(unixtime)
 
