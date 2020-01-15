@@ -69,7 +69,7 @@ Probe | RPI Pin
 GND | 9 (GND)
 SIGNAL | 7 (GPIO4)  (connect throught a 1.2kOhm resistor)
 
-
+![Pinout](raspberry_pinout.jpg?raw=true "")
 
 Cable for Minidin8 conector for Apogee Alta:
 
@@ -91,11 +91,7 @@ boot the raspberry. It will get the IP from DHCP, if fail to bring up the eth0 i
 log as root (defaul passwd: 'albaricoque', change it soon) and run the following commands:
 
 >raspi-config
-
 > ---> Expand Filesystem  -> //Do it
-
-
-
 
 Then edit your /etc/network/interface to set the IP address and /home/cronos/cronostamper/config.py to customize the variables
 
@@ -111,32 +107,28 @@ and make and SD as raspberry usual
 
 boot the raspberry log as root (defaul passwd: 'raspberry', change it soon) and run the following commands:
 
-###Basic packages
+### Basic packages
+Update de system:
 >apt-get update
+>apt-get upgrade
 
->apt-get dist-upgrade
-
+Configure timezon to UTC
 >raspi-config
-
 > ---> Expand Filesystem  -> //Do it
 > ---> Internationalisation Options --> Change Timezone -> Etc -> UTC
 
+Install basic packages:
 >apt-get install nano apt-utils bash-completion rpi-update raspi-config 
-
 >apt-get install minicom git unzip make gcc g++ python-pip
-
 >rpi-update 
-
 >reboot
 
-###Setup high precisón GPS-PPS disciplined clock
-More information on: http://www.satsignal.eu/ntp/Raspberry-Pi-quickstart.html
+### Setup high precisón GPS-PPS disciplined clock
+More information on: [stasignal](http://www.satsignal.eu/ntp/Raspberry-Pi-quickstart.html)
 
-disable serial console:
+Disable serial console:
 >raspi-config
-
 >---> Advanced Options -> Disable Serial Shell (optional) 
-
 >.....
 
 Edit some files
@@ -163,6 +155,8 @@ Add pps-gpio on a new line, if it is not already present.
 
 GPSD_OPTIONS="-n" and DEVICE='/dev/ttyAMA0'
 
+### Serial port considerations:
+
 Raspberry PI Model 3 has wifi and bluetooth. BT chip use the port /dev/ttyAMA0 internaly so some change are needed. There is two posibilites:
 
 Option 1:
@@ -185,13 +179,21 @@ and then blacklist the wifi and bt modules in /etc/modprobe/raspi-blacklist.conf
 >#bt
 >blacklist btbcm
 >blacklist hci_uart
-
 >reboot
 
+**UPDATE:**
+Option 3 (preffered):
+Raspberry 3+ works different. The best options is to change bluetooth serial port using miniuart-bt device tree overlay as explained in [The Raspberry Pi UARTs](https://www.raspberrypi.org/documentation/configuration/uart.md)
+
+Add this line in /boot/config.txt
+
+dtoverlay=miniuart-bt
+
+This make /dev/ttyAMA0 available for GPS 
+
+### Install user space software:
 >apt-get install pps-tools
-
 >apt-get install libcap-dev
-
 >apt-get install gpsd gpsd-clients ntp
 
 The supplied version of NTPD on the Raspberry Pi doesn’t support PPS so we need to recompile it (Please note that the configure and compile steps may take up to 30 minutes). 
@@ -199,27 +201,19 @@ The supplied version of NTPD on the Raspberry Pi doesn’t support PPS so we nee
 Check last version from http://www.ntp.org/downloads.html
 
 >wget 
-
 >tar zxvf ntp-4.2.8p6.tar.gz 
-
 >cd ntp-4.2.8p6
-
 >./configure --enable-linuxcaps
 
-
->Create symlink to pps0 and gps0 automatically at boot:
-
->Specifically, create the file: /etc/udev/rules.d/09.pps.rules with the following contents:
+Create symlink to pps0 and gps0 automatically at boot:
+Specifically, create the file: /etc/udev/rules.d/09.pps.rules with the following contents:
 
 >KERNEL=="ttyAMA0", SYMLINK+="gps0"
 >KERNEL=="pps0", OWNER="root", GROUP="tty", MODE="0660", SYMLINK+="gpspps0"
 
 >make
-
 >make install
-
 >service ntp stop
-
 >cp /usr/local/bin/ntp* /usr/bin/ && cp /usr/local/sbin/ntp* /usr/sbin/
 
 Edit the configuration file:
@@ -247,19 +241,13 @@ Close and restart
 
 ### Setup cronostamper specific
 
-Get the pigpiod daemon http://abyz.co.uk/rpi/pigpio/index.html and compile
+Get the pigpiod daemon [pigpio](http://abyz.co.uk/rpi/pigpio/index.html) and compile
 
 >wget abyz.co.uk/rpi/pigpio/pigpio.zip
-
 >unzip pigpio.zip
-
 >cd PIGPIO
-
 >make
-
 >sudo make install
-
-
 
 Donwload FLASK for the embebeded web server
 
@@ -270,15 +258,10 @@ Get latest version
 Get zmq lastest. CONFLATE does not work on stock version
 
 >wget http://download.zeromq.org/zeromq-4.1.4.tar.gz
-
 >tar xvzf zeromq-4.1.4.tar.gz
-
 >cd zeromq-4.1.4
-
 >./configure --without-libsodium
-
 >./make
-
 >./make install
 
 Install the python bindings
@@ -308,7 +291,6 @@ In order to run some test you need aditional stuff:
 at the end of the file include this lines:
 
 >pigpiod
-
 >/home/cronos/cronostamper/start.sh
 
 
