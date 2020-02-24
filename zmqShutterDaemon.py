@@ -104,8 +104,11 @@ def GPIOshutter(gpio, level, tick):
 
 
 def unixTime2date(unixtime):
-	d = str(datetime.datetime.fromtimestamp(unixtime))
-	return d
+        #dateStr = str(datetime.datetime.fromtimestamp(unixtime))
+        d = datetime.datetime.fromtimestamp(unixtime)
+        dateStr=d.strftime("%Y-%m-%d %H:%M:%S.%f")
+        return dateStr
+
 
 def unixTime2MJD(unixtime):
 	return ( unixtime / 86400.0 ) + 2440587.5 - 2400000.5

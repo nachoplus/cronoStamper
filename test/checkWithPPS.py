@@ -39,22 +39,28 @@ socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 period=1000000
 delta=datetime.timedelta(microseconds=period)
 #Get 100 samples
-maxsamples=10
+maxsamples=300
 samples=[]
 print "Geting ",maxsamples," samples. Pulse width:",period," us. Estimated time:",period*maxsamples/1000000.,"seconds"
 for i in range(maxsamples):
 	    	topic, msg  = demogrify(socket.recv())
 		unixTimeStamp=datetime.datetime.fromtimestamp(msg['unixUTC'])
+		#dateUTC=datetime.datetime.strptime(msg['dateUTC'],'%Y-%m-%d %H:%M:%S.%f')+3600*datetime.timedelta(seconds=1)
 		if i==0:
 			trun=int(msg['unixUTC']*1000000/period)*period/1000000.
 			first_sample=datetime.datetime.fromtimestamp(trun)
 		ref_timestamp=first_sample+i*delta
+		#errDATE=(dateUTC-ref_timestamp).total_seconds()
 		err=(unixTimeStamp-ref_timestamp).total_seconds()
-		samples.append((ref_timestamp,unixTimeStamp,err))
+		errUNIX=(msg['unixUTC']-(trun+i*period/1000000.))
+                print(". "+str(i)+" ERR: "+str(err))
+		samples.append((ref_timestamp,unixTimeStamp,err,errUNIX))
 		#print i,ref_timestamp,unixTimeStamp,err
 		#time.sleep(5)
 
-errors = np.asarray(samples)[:,2]
+data = np.asarray(samples)
+errors = data[:,3]
+np.savetxt("errors.csv", data[:,[2,3]], delimiter=",")
 print "==== RESULTS ===="
 print "Mean Err:",errors.mean()
 print "Max  Err:",errors.max(),
@@ -64,7 +70,7 @@ print "HISTOGRAM"
 #print np.histogram(errors)
 
 plt.clf()
-plt.hist(errors*1000000,bins=7)
+plt.hist(errors*1000000)
 plt.title("Error Histogram")
 plt.xlabel("Error [microseconds]")
 plt.ylabel("Frequency")
