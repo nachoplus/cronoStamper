@@ -24,7 +24,7 @@ fli={}
 fli['name']='CENTU1'
 fli['jpg']='fliCobalt.jpg'
 
-camera=ixon
+camera={u'name': u'stamper00', u'jpg': u'sol.jpg'}
 
 debug=0
 zmqShutterPort = 5556

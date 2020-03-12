@@ -147,11 +147,16 @@ function updateGPS() {
 	$('#EPY').text(data.epy);
 	$('#EPV').text(data.epv);
 
+
 	$('#PLLOFFSET').text(data.pllOffset);
 	$('#PPM').text(data.ppm);
 	$('#CLKERROR').text(data.ClkError);
 	$('#CLKMAXERROR').text(data.ClkMaxError);
 	$('#CLKSOURCE').text(data.clkReferenceID);
+	$('#CLKTIME').text((new Date()).toUTCString());
+
+        var x = (new Date()).getTime();
+
 	if (data.ppsOK) {
 		$("#CLKSOURCE").css("color","#0a0")
 		$("#CLKSOURCE").css("font-weight","normal")
@@ -167,7 +172,6 @@ function updateGPS() {
 	}
 
      var R=6371000;
-     var x = (new Date()).getTime();
 
 	if (primera==true) {
 	   for(i=0; i<n; i++){  
@@ -454,6 +458,9 @@ GPS
 <tr><td colspan="2">
 CLOCK <a href='clkStatus'>(graphs)</a>
 </td>
+<tr><td >CLOCK TIME (UTC)</td><td>
+    <div id="CLKTIME" align="left"></div>
+</td></tr>
 <tr><td >Clock source (wait until equal to 'PPS')</td><td>
     <div id="CLKSOURCE" align="left"></div>
 </td></tr>
