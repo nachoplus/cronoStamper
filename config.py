@@ -24,7 +24,7 @@ fli={}
 fli['name']='CENTU1'
 fli['jpg']='fliCobalt.jpg'
 
-camera={u'name': u'stamper00', u'jpg': u'sol.jpg'}
+camera={u'name': u'stamper00', u'jpg': u'moon_big_small.png'}
 
 debug=0
 zmqShutterPort = 5556

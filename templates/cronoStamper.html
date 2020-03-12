@@ -153,7 +153,7 @@ function updateGPS() {
 	$('#CLKERROR').text(data.ClkError);
 	$('#CLKMAXERROR').text(data.ClkMaxError);
 	$('#CLKSOURCE').text(data.clkReferenceID);
-	$('#CLKTIME').text((new Date()).toUTCString());
+	$('#CLKTIME').text(data.clktime);
 
         var x = (new Date()).getTime();
 

@@ -102,6 +102,8 @@ def lastValue():
     	return msg
 
 def lastGPSValue():
+        from time import gmtime, strftime
+        time=strftime("%H:%M:%S +0000", gmtime())
 	global lastGPS
 	try:
 		m= socketGPS.recv(flags=zmq.NOBLOCK)
@@ -111,6 +113,8 @@ def lastGPSValue():
 	except:
 		#print "Get:",last
 		msg=lastGPS
+        finally:
+                msg['clktime']=time
     	return msg
 
 
