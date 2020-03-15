@@ -46,8 +46,8 @@ ShutterFlange="SHUTTER_LOW"
 #for pulse on close shutter (inverted logic)
 #ShutterFlange="SHUTTER_HIGH"
 
-#SIGNAL_GPIO=11
-SIGNAL_GPIO=18
+SIGNAL_GPIO=11
+#SIGNAL_GPIO=18
 PPS_GPIO=18
 TRIP_GPIO=4
 TRIP_WAVE_REF_GPIO=22
