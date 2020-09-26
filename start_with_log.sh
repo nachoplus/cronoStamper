@@ -1,5 +1,6 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 LOGDIR=${HOME}/log
+mkdir -p $LOGDIR
 echo "Starting..."
 sleep 3
 nohup $DIR/zmqShutterDaemon.py >$LOGDIR/zmqShutterDaemon.log 2>&1 &

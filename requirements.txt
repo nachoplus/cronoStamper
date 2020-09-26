@@ -1,0 +1,4 @@
+pigpio
+zmq
+flask
+gps
