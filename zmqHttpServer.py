@@ -59,7 +59,7 @@ def clkStatus():
 	if deep==None:
 		deep='200'
 	os.environ["_CLK_SAMPLES"] = deep
-	getpeersCMD="ntpq -np|grep '+'"
+	getpeersCMD="ntpq -np|grep '^+'"
 	peers=commands.getstatusoutput(getpeersCMD)
 	peers=peers[1].split('\n')
 	npeers=len(peers)
