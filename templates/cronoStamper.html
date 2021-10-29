@@ -220,6 +220,9 @@ function updateGPS() {
       if (margen==0) {
 		margen=ymax/10;
       }	
+      if (margen==0) {
+		margen=0.0001;
+      }      
       media=(ymax+ymin)/2;
       options.axes.yaxis.min = ymin-margen;
       options.axes.yaxis.max = ymax+margen;
