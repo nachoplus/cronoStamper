@@ -6,7 +6,7 @@ independent GPS chip to the signal Cronostamper connector.
  
 Nacho Mas January-2017
 '''
-cronostamper="192.168.2.103"
+cronostamper="10.41.77.141"
 
 import sys
 import zmq
