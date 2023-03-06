@@ -59,6 +59,33 @@ def clkStatus():
 	if deep==None:
 		deep='200'
 	os.environ["_CLK_SAMPLES"] = deep
+	getpeersCMD="chronyc -n sources|grep '^\^'"
+	peers=commands.getstatusoutput(getpeersCMD)
+	peers=peers[1].split('\n')
+	npeers=len(peers)
+	print npeers,peers
+	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
+	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
+	if npeers>=1:
+		if len(peers[0])>10:
+			peer=peers[0].split()[1]
+			os.environ["_NTP_INTERNET_PEER0"] = peer
+			print(peer)
+	if npeers>=2:
+		peer=peers[1].split()[1]
+		os.environ["_NTP_INTERNET_PEER1"] = peer
+        	print(peer)		
+	path=os.path.dirname(os.path.realpath(__file__))
+	exe=path+'/test/peerGraph.plot  >'+path+'/test/clockStats.png'
+	cmdrst=commands.getstatusoutput(exe)
+	return send_from_directory(directory=path+'/test', filename='clockStats.png', cache_timeout= 0)    
+
+@app.route('/clkStatus_ntpd')
+def clkStatus_ntpd():
+	deep=request.args.get('deep')
+	if deep==None:
+		deep='200'
+	os.environ["_CLK_SAMPLES"] = deep
 	getpeersCMD="ntpq -np|grep '^+'"
 	peers=commands.getstatusoutput(getpeersCMD)
 	peers=peers[1].split('\n')
@@ -74,9 +101,9 @@ def clkStatus():
 		peer=peers[1].split()[0][1:]
 		os.environ["_NTP_INTERNET_PEER1"] = peer
 	path=os.path.dirname(os.path.realpath(__file__))
-	exe=path+'/test/peerGraph.plot  >'+path+'/test/clockStats.png'
+	exe=path+'/test/peerGraph_ntpd.plot  >'+path+'/test/clockStats_ntpd.png'
 	cmdrst=commands.getstatusoutput(exe)
-	return send_from_directory(directory=path+'/test', filename='clockStats.png')
+	return send_from_directory(directory=path+'/test', filename='clockStats_ntpd.png', cache_timeout= 0)
 
 @app.route('/trigger.json')
 def trigger():

@@ -184,7 +184,7 @@ function updateGPS() {
 	      	if(data_gps.length > n-1){
 		         data_gps.shift();
 	      	}
-	      	data_pllOffset.push([x - (n-1-i)*t,data.ClkError]);  
+	      	data_pllOffset.push([x - (n-1-i)*t,data.ClkMaxError]);  
 	      	data_ClkError.push([x - (n-1-i)*t,data.pllOffset]);  
 	        var xinit = Number(data.lat)*Math.PI/180.*R;
 		var yinit = Number(data.lon)*Math.PI/180.*R*Math.cos(Number(data.lat)*Math.PI/180.);
@@ -204,12 +204,12 @@ function updateGPS() {
       }
 
 
-      var y = Number(data.ClkError)*1000000;
+      var y = Number(data.ClkMaxError);
       data_pllOffset.push([x,y]);
       if (plot1) {
     	plot1.destroy();
       }
-      options.title='CLOCK:  Quality (wait until < 100)'
+      options.title='CLOCK: max error in microseconds (wait until < 100)'
       plot1.series[0].data = data_pllOffset; 
       options.axes.xaxis.min = data_pllOffset[0][0];
       options.axes.xaxis.max = data_pllOffset[data_pllOffset.length-1][0];
@@ -229,12 +229,12 @@ function updateGPS() {
 
       plot1 = $.jqplot ('pllOffset', [data_pllOffset],options);
 
-      var y = Number(data.pllOffset)*1000;
+      var y = Number(data.pllOffset);
       data_ClkError.push([x,y]);
       if (plot2) {
     	plot2.destroy();
       }
-      options.title='CLOCK: offset from UTC (microseconds)'
+      options.title='CLOCK: RMS offset from UTC (microseconds)'
       plot2.series[0].data = data_ClkError; 
       options.axes.xaxis.min = data_ClkError[0][0];
       options.axes.xaxis.max = data_ClkError[data_ClkError.length-1][0];
@@ -467,16 +467,16 @@ CLOCK <a href='clkStatus'>(graphs)</a>
 <tr><td >Clock source (wait until equal to 'PPS')</td><td>
     <div id="CLKSOURCE" align="left"></div>
 </td></tr>
-<tr><td >Clock offset from UTC (milliseconds, estimated)</td><td>
+<tr><td >Clock RMS offset from UTC (microseconds)</td><td>
     <div id="PLLOFFSET" align="left"></div>
 </td></tr>
 <tr><td >Frequency Correction (ppm==microsecond/s)</td><td>
     <div id="PPM" align="left"></div>
 </td></tr>
-<tr><td>Clock Estimated Error (seconds)</td><td>
+<tr><td>Clock current Error (microseconds)</td><td>
     <div id="CLKERROR" align="left"></div>
 </td></tr>
-<tr><td>Clock Max Error (seconds)</td><td>
+<tr><td>Clock Max Error (microseconds)</td><td>
     <div id="CLKMAXERROR" align="left"></div>
 </td></tr>
 </table>
