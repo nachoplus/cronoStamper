@@ -35,14 +35,14 @@ def trip():
 		while RTCtripList[0]<RTCsecond+1:
 			RTCtripList.remove(RTCtripList[0])
 	except:
-		print "Trip list empty"
+		print("Trip list empty")
 	if len(RTCtripList)==0:
 		return False
 	RTCtrip=RTCtripList[0]
 	delta=RTCtrip-RTCsecond
 	if delta>=1-margin and delta<2.-margin :
-		print "RTC:",RTCtrip,RTCsecond,delta
-		print "FIRE!"
+		print("RTC:",RTCtrip,RTCsecond,delta)
+		print("FIRE!")
 		return True
 	else:
 		return False
@@ -54,7 +54,7 @@ def checkWaveBuffer():
 	CBS=pi.wave_get_cbs()
 	Pulse=pi.wave_get_pulses()
 	Micros=pi.wave_get_micros()
-	print "CBS, Pulses, Micros:",CBS,'/',maxCBS,Pulse,'/',maxPulse,Micros,'/',maxMicros
+	print ("CBS, Pulses, Micros:",CBS,'/',maxCBS,Pulse,'/',maxPulse,Micros,'/',maxMicros)
 
 def defwave(gpio,preamble,pulse,postamble):
 	syncwave=[]	
@@ -69,14 +69,14 @@ def sendWave():
 	wavelength=1000000-ppm
 	preamble=locus
 	postamble=wavelength-pulse-slash-preamble
-	#print preamble,pulse,postamble,wavelength
+	#print (preamble,pulse,postamble,wavelength)
 	defwave(TRIP_WAVE_REF_GPIO,preamble,pulse,postamble)
 	if trip():
 		preamble=(RTCtrip-int(RTCtrip))*(wavelength)
 		postamble=(wavelength-pulse)-slash-preamble
 		if postamble<0:
 			postamble=0
-		print "TRIP",preamble,pulse,postamble,RTCsecond
+		print("TRIP",preamble,pulse,postamble,RTCsecond)
 		defwave(TRIP_GPIO,preamble,pulse,postamble)
 	wid= pi.wave_create()
 	
@@ -93,9 +93,9 @@ def getWaveTick(gpio, level, tick):
 	offset=pigpio.tickDiff(RTCtick+locus,waveTick) 
 	if offset>=4200000000:
 		offset=-pigpio.tickDiff(waveTick,RTCtick+locus) 
-	print "->OFFSET",offset,RTCtick+locus,waveTick,waveTick-(RTCtick+locus),"<-----"
+	print ("->OFFSET",offset,RTCtick+locus,waveTick,waveTick-(RTCtick+locus),"<-----")
 	if offset >=wavelength*0.9:
-		print "OFFSET to big:",offset," Probably missed PPS signal. Reseting"
+		print ("OFFSET to big:",offset," Probably missed PPS signal. Reseting")
 		pi.wave_clear()
 		RTCsecond=0
 		RTCtick=0
@@ -125,7 +125,7 @@ def discipline(gpio, level, tick):
 	#trying to avoid spurius signals
 	#not update if there is less than 0.9999 seconds
 	if lastSecondTicks <999900:
-		print "Spuck!",lastSecondTicks
+		print ("Spuck!",lastSecondTicks)
 		return
 	RTCsecond=int(round(now))
 	#print (now,RTCsecond,RTCtick,tick,diff,lastSecondTicks)
@@ -133,7 +133,7 @@ def discipline(gpio, level, tick):
 	# 
 	if not pi.wave_tx_busy():
 		sendWave()	
-		print "WAVE END!! RESTARTING"
+		print ("WAVE END!! RESTARTING")
 
 def ticks2unixUTC(tick):
 	global RTCsecond,RTCtick,ppm
@@ -212,7 +212,7 @@ class cmdProcesor:
 			return "ERROR: Bad date. Expected format '%Y-%m-%d %H:%M:%S.%f'"
 		#workarround, mktime FAIL TO get microseconds
 		unixtime = time.mktime(date.timetuple())+int(date.strftime('%f'))/1000000.
-		print date,unixtime
+		print(date,unixtime)
 		return self.set_alarm(unixtime)
 
 	def cmd_listAlarms(self,arg):
@@ -249,14 +249,14 @@ if __name__ == '__main__':
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
-        print "INIT: Waiting for a PPS signal."
+        print ("INIT: Waiting for a PPS signal.")
 
 	while True:
 	    	#  Wait for next request from client
 	    	message = socket.recv()
-		#print "CMD:",message
+		#print ("CMD:",message)
 		response=processor.cmd(message)
-		#print response
+		#print (response)
 		socket.send(response)
 		time.sleep(0.01)
 

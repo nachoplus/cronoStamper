@@ -32,7 +32,7 @@ if __name__ == '__main__':
 		topic, msg  = demogrify(m)
 		ser.write(msg['dateUTC']+'\n')
 		ser.flush()
-		print msg['dateUTC']
+		print(msg['dateUTC'])
 		time.sleep(0.1)
 
 

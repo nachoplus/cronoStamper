@@ -30,9 +30,9 @@ class gps2zmq:
 	try:
 		flags= gps.WATCH_ENABLE | gps.WATCH_PPS 
 		self.session = gps.gps(mode=flags)	
-		print "GPSD contacted"
+		print("GPSD contacted")
 	except:
-		print "GPSD not running. Retrying.."
+		print("GPSD not running. Retrying..")
 
      def run(self):
 	while True:

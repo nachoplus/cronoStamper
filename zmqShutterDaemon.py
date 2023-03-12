@@ -45,10 +45,10 @@ def discipline(gpio, level, tick):
 	#trying to avoid spurius signals
 	#not update if there is less than 0.9999 seconds
 	if diff <999900:
-		print "Spuck!",diff
+		print("Spuck!",diff)
 		return
 	RTCsecond=int(round(now))
-	print (now,RTCsecond,RTCtick,tick,diff)
+	print(now,RTCsecond,RTCtick,tick,diff)
 	RTCtick=tick
 
 	
@@ -57,7 +57,7 @@ def discipline(gpio, level, tick):
 def ticks2unixUTC(tick):
 	global RTCsecond,RTCtick,ppm
 	tickOffset=pigpio.tickDiff(RTCtick, tick)
-	print RTCsecond,RTCtick,tick,tickOffset
+	print(RTCsecond,RTCtick,tick,tickOffset)
 	bias=ppm*(tickOffset/1000000.)
 	UTC=float(RTCsecond)+(tickOffset+bias)/1000000.
 	#print (RTCsecond,ppm,tick,tickOffset,pllOffset,bias,UTC)
@@ -94,12 +94,12 @@ def GPIOshutter(gpio, level, tick):
 
 	if debug:
 		if level == 1:
-			print "HIGH:",
+			print("HIGH:"),
 		else:
-			print "LOW: ",
-		print msg
-		print unixTime2date(unixUTC)
-		print "%.12f" % unixTime2MJD(unixUTC)
+			print("LOW: "),
+		print(msg)
+		print(unixTime2date(unixUTC))
+		print("%.12f" % unixTime2MJD(unixUTC))
 
 
 
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 	socket = context.socket(zmq.PUB)
 	socket.bind("tcp://*:%s" % zmqShutterPort)
 	getSystemClockData()
-	print pi.get_mode(SIGNAL_GPIO), pi.get_mode(PPS_GPIO)
+	print(pi.get_mode(SIGNAL_GPIO), pi.get_mode(PPS_GPIO))
 	pi.set_pull_up_down(SIGNAL_GPIO, pigpio.PUD_DOWN)
 	pi.set_pull_up_down(PPS_GPIO, pigpio.PUD_DOWN)
 	cb1 = pi.callback(SIGNAL_GPIO, pigpio.EITHER_EDGE, GPIOshutter)

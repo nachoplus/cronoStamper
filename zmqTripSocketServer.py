@@ -24,21 +24,21 @@ HOST = ''   # Symbolic name meaning all available interfaces
  # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print 'Starting Trip TCP server'
-print 'Socket created',HOST+":",str(TripPort)
+print('Starting Trip TCP server')
+print('Socket created',HOST+":",str(TripPort))
 
 #Bind socket to local host and port
 try:
     s.bind((HOST, TripPort))
 except socket.error as msg:
-    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+    print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
     sys.exit()
      
-print 'Socket bind complete'
+print('Socket bind complete')
  
 #Start listening on socket
 s.listen(1)
-print 'Socket now listening'
+print('Socket now listening')
  
 
 
@@ -53,7 +53,7 @@ def recv_end(conn):
 	    try:	
             	data=conn.recv(1)
 	    except:
-		print "socket close"
+		print("socket close")
 		cmd="SOCKET_CLOSE"	
 		break
 
@@ -71,7 +71,7 @@ def recv_end(conn):
 	    else:
             	total_data.append(data)
 
-    #print "CMD parse:",repr(cmd)
+    #print ("CMD parse:",repr(cmd))
     return cmd
 
 #Function for handling connections. This will be used to create threads
@@ -87,17 +87,17 @@ def clientthread(conn):
 	    	cmd=recv_end(conn)
 		if cmd == "SOCKET_CLOSE" or cmd == "EXIT" or cmd == "QUIT":
 			break
-		print "<-",cmd
+		print ("<-",cmd)
 		zmqSocket.send(cmd)
 		reply=zmqSocket.recv()
-		print "->",reply
+		print ("->",reply)
     		conn.send(str(reply)+'\n')
 
 
     #came out of loop
     #conn.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
     conn.close()
-    print "Disconnecting.."
+    print("Disconnecting..")
  
 #now keep talking with the client
 RUN=True
@@ -105,7 +105,7 @@ while RUN:
   try:
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
-    print 'Connected with ' + addr[0] + ':' + str(addr[1])
+    print('Connected with ' + addr[0] + ':' + str(addr[1]))
      
     #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
     start_new_thread(clientthread ,(conn,))

@@ -23,22 +23,22 @@ HOST = ''   # Symbolic name meaning all available interfaces
 PORT = socketsPort # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print 'Starting CronoStamper Sockets Server.'
-print 'Socket created'
+print('Starting CronoStamper Sockets Server.')
+print('Socket created')
 
  
 #Bind socket to local host and port
 try:
     s.bind((HOST, PORT))
 except socket.error as msg:
-    print 'Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1]
+    print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
     sys.exit()
      
-print 'Socket bind complete'
+print('Socket binding completed')
  
 #Start listening on socket
 s.listen(10)
-print 'Socket now listening'
+print('Socket now listening')
  
 nthreads=0
 
@@ -47,7 +47,7 @@ nthreads=0
 #Important: Each thread has to have its own zmq sockets to avoid data corruption
 def clientthread(conn,addr,n):
     global nthreads
-    print str(n),str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads
+    print(str(n),str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads)
 
     #ZMQ context
     context = zmq.Context()
@@ -103,11 +103,11 @@ def clientthread(conn,addr,n):
 		#catch the send reply to manage if client close the socket
 		try:
     			conn.sendall(reply)
-			print str(n),reply,	
+			print (str(n),reply)	
 		except:     
 			#came out of loop. close socket and thread
 			nthreads-=1
-		    	print str(n),str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads
+		    	print(str(n),str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads)
 		    	conn.close()
 			socketShutter.close()
 			socketGPS.close()

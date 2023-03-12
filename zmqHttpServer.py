@@ -63,7 +63,7 @@ def clkStatus():
 	peers=commands.getstatusoutput(getpeersCMD)
 	peers=peers[1].split('\n')
 	npeers=len(peers)
-	print npeers,peers
+	print(npeers,peers)
 	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
 	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
 	if npeers>=1:
@@ -90,7 +90,7 @@ def clkStatus_ntpd():
 	peers=commands.getstatusoutput(getpeersCMD)
 	peers=peers[1].split('\n')
 	npeers=len(peers)
-	print npeers,peers
+	print(npeers,peers)
 	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
 	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
 	if npeers>=1:

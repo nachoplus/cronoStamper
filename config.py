@@ -121,7 +121,7 @@ def chrony_getSystemClockData():
 		pllOffset="9999."
         	maxError="9999."
 		Error="9999."
-		print "Warning: NTPD fail"
+		print("Warning: NTPD fail")
 
 	msg={'pllOffset':pllOffset,'ppm':ppm,'ClkMaxError':maxError,'ClkError':Error,'ppsOK':ppsOK,'clkReferenceID':referenceID}
 	print(msg)
@@ -152,7 +152,7 @@ def ntpd_getSystemClockData():
 		pllOffset="9999."
         	maxError="9999."
 		Error="9999."
-		print "Warning: NTPD fail"
+		print("Warning: NTPD fail")
 
 	cmdrst=commands.getstatusoutput('ntpq -c sysinfo')
 	status=cmdrst[0]
@@ -171,7 +171,7 @@ def ntpd_getSystemClockData():
 
 		referenceID=res['reference ID'].strip()
 	else:
-		print "Warning: NTPD fail"
+		print("Warning: NTPD fail")
 		referenceID="NTPD FAIL"
 
 	if referenceID=='PPS':
