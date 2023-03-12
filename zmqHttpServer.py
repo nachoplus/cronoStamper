@@ -57,24 +57,21 @@ def gps_chart():
 def clkStatus():
 	deep=request.args.get('deep')
 	if deep==None:
-		deep='200'
+		deep='60'
 	os.environ["_CLK_SAMPLES"] = deep
-	getpeersCMD="chronyc -n sources|grep '^\^'"
+	#getpeersCMD="chronyc -n sources|grep '^\^'"
+	getpeersCMD='cat  /var/log/chrony/measurements.log |grep -v "PPS"|grep -v "GPS"|grep -v "UTC"|grep -v "="|tr -s " "|cut -d" " -f 3|tail -2'
 	peers=commands.getstatusoutput(getpeersCMD)
+	print(peers)
 	peers=peers[1].split('\n')
 	npeers=len(peers)
 	print(npeers,peers)
 	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
 	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
 	if npeers>=1:
-		if len(peers[0])>10:
-			peer=peers[0].split()[1]
-			os.environ["_NTP_INTERNET_PEER0"] = peer
-			print(peer)
+		os.environ["_NTP_INTERNET_PEER0"] = peers[0]
 	if npeers>=2:
-		peer=peers[1].split()[1]
-		os.environ["_NTP_INTERNET_PEER1"] = peer
-        	print(peer)		
+		os.environ["_NTP_INTERNET_PEER1"] = peers[1]
 	path=os.path.dirname(os.path.realpath(__file__))
 	exe=path+'/test/peerGraph.plot  >'+path+'/test/clockStats.png'
 	cmdrst=commands.getstatusoutput(exe)

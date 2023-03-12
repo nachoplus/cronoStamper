@@ -40,10 +40,10 @@ line_number='int($0)'
 
 set multiplot layout 2,2 rowsfirst title "Cronostamper Test. Date:".date." Samples:".samples."\nHostname:".hostname."Serial Number:".serialnumber
 
-set title "PPS Reference Clock"
+set title "RMS offset from UTC"
 set ylabel "Clock offset (s)"
 set xlabel "Time"
-set label 1 "System Clock deviation from\nPPS(pulse per second) signal" at graph 0.05,0.95
+set label 1 "System Clock RMS deviation from\nfrom the Reference Clock (usually the PPS signal)" at graph 0.05,0.95
 plot \
 "<cat /var/log/chrony/tracking.log|tail -$_CLK_SAMPLES|sed '/^=/d'|sed '/^ /d'" u 1:14 t 'RMS Offset' with lines   lt 3,\
 0 w l lt -1
@@ -60,10 +60,8 @@ set title "Internet Server"
 unset label 2
 set label 3 "System Clock deviation as from\nsome internet stratum 2 servers.\nNot used. Show as reference." at graph 0.05,0.95
 plot \
-"< grep -a $_NTP_INTERNET_PEER0 /var/log/chrony/statistics.log|tail -$_CLK_SAMPLES" u 1:5:6 w errorbars t peer0.' error'   lt 1,\
-"< grep -a $_NTP_INTERNET_PEER0 /var/log/chrony/statistics.log|tail -$_CLK_SAMPLES" u 1:5 t peer0   lt 1,\
-"< grep -a $_NTP_INTERNET_PEER1 /var/log/chrony/statistics.log|tail -$_CLK_SAMPLES" u 1:5:6 w errorbars t peer1.' error'   lt 2,\
-"< grep -a $_NTP_INTERNET_PEER1 /var/log/chrony/statistics.log|tail -$_CLK_SAMPLES" u 1:5 t peer1   lt 2,\
+"< grep -a $_NTP_INTERNET_PEER0 /var/log/chrony/measurements.log|tail -$_CLK_SAMPLES" u 1:12 t peer0   lt 1,\
+"< grep -a $_NTP_INTERNET_PEER1 /var/log/chrony/measurements.log|tail -$_CLK_SAMPLES" u 1:12 t peer1   lt 2,\
 0 w l lt -1
 
 set title "Clock ajustments"
@@ -73,7 +71,9 @@ set ylabel "Clock offset (s)"
 set y2label "Frequency offset (PPM or microsecons/second)"
 plot \
 "<cat  /var/log/chrony/tracking.log|tail -$_CLK_SAMPLES" u 1:7:10 w errorbars t "Clock offset"   lt 1,\
+"<cat  /var/log/chrony/tracking.log|tail -$_CLK_SAMPLES" u 1:7:10 w l t ""   lt 1,\
 "<cat  /var/log/chrony/tracking.log|tail -$_CLK_SAMPLES" u 1:5:6 w errorbars axes x1y2 t "Frequency correction"   lt 3,\
+"<cat  /var/log/chrony/tracking.log|tail -$_CLK_SAMPLES" u 1:5:6 w l axes x1y2 t ""   lt 3,\
 0 w l lt -1
 
 
