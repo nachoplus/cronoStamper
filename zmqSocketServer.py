@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 Sockets server- 
 On connect send a string with the 
@@ -46,36 +46,36 @@ nthreads=0
 #Function for handling connections. This will be used to create threads
 #Important: Each thread has to have its own zmq sockets to avoid data corruption
 def clientthread(conn,addr,n):
-    global nthreads
-    print(str(n),str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads)
+	global nthreads
+	print(str(n),str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads)
 
-    #ZMQ context
-    context = zmq.Context()
+	#ZMQ context
+	context = zmq.Context()
 
-    #Subscribe to shutter zmq queue
-    topicfilter = ShutterFlange
-    socketShutter = context.socket(zmq.SUB)
-    #only one message (do not work with the stock version of zmq, works from ver 4.1.4)
-    socketShutter.setsockopt(zmq.CONFLATE, 1)
-    socketShutter.connect ("tcp://localhost:%s" % zmqShutterPort)
-    socketShutter.setsockopt(zmq.SUBSCRIBE, topicfilter)
+	#Subscribe to shutter zmq queue
+	topicfilter = ShutterFlange
+	socketShutter = context.socket(zmq.SUB)
+	#only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+	socketShutter.setsockopt(zmq.CONFLATE, 1)
+	socketShutter.connect ("tcp://localhost:%s" % zmqShutterPort)
+	socketShutter.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
-    #Subscribe to gps and clock zmq queue
-    GPStopicfilter = "GPS"
-    socketGPS = context.socket(zmq.SUB)
-    #CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
-    socketGPS.setsockopt(zmq.CONFLATE, 1)
-    socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
-    socketGPS.setsockopt(zmq.SUBSCRIBE, GPStopicfilter)
+	#Subscribe to gps and clock zmq queue
+	GPStopicfilter = "GPS"
+	socketGPS = context.socket(zmq.SUB)
+	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+	socketGPS.setsockopt(zmq.CONFLATE, 1)
+	socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
+	socketGPS.setsockopt_string(zmq.SUBSCRIBE, GPStopicfilter)
 
-    lastGPS={}
+	lastGPS={}
 
 
-    #Sending message to connected client
-    #conn.send('OK.CronoStamper socket server.\n') #send only takes string
-     
-    #infinite loop so that function do not terminate and thread do not end.
-    while True:
+	#Sending message to connected client
+	#conn.send('OK.CronoStamper socket server.\n') #send only takes string
+		
+	#infinite loop so that function do not terminate and thread do not end.
+	while True:
 		#get shutter time
 		m= socketShutter.recv()
 		topic, msg  = demogrify(m)
@@ -102,16 +102,16 @@ def clientthread(conn,addr,n):
 		reply = "%s %010.6f %01.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],ppsOK,clkError)
 		#catch the send reply to manage if client close the socket
 		try:
-    			conn.sendall(reply)
+			conn.sendall(reply.encode())
 			print (str(n),reply)	
 		except:     
 			#came out of loop. close socket and thread
 			nthreads-=1
-		    	print(str(n),str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads)
-		    	conn.close()
+			print(str(n),str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads)
+			conn.close()
 			socketShutter.close()
 			socketGPS.close()
-		    	break
+			break
 		
 
 

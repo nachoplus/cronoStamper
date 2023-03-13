@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 Trip a preprogramed trigger signal
 Nacho Mas June-2018
@@ -7,7 +7,6 @@ import pigpio
 import time
 import datetime
 import zmq
-import commands
 import json
 
 from config import *
@@ -112,7 +111,7 @@ def getWaveTick(gpio, level, tick):
 def getPPM():
 	global ppm
 	clkData=getSystemClockData()
-       	ppm=float(clkData['ppm'])
+	ppm=float(clkData['ppm'])
 
 
 #get data to correlate system time with the CPU ticks
@@ -164,7 +163,7 @@ class cmdProcesor:
 		}
 
 	def cmd(self,cmd):
-                for c in self.CMDs.keys():
+		for c in self.CMDs.keys():
 			l=len(c)
 			if (cmd[:l]==c):
 				arg=cmd[l:].strip()
@@ -249,15 +248,15 @@ if __name__ == '__main__':
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
-        print ("INIT: Waiting for a PPS signal.")
+	print ("INIT: Waiting for a PPS signal.")
 
 	while True:
-	    	#  Wait for next request from client
-	    	message = socket.recv()
+		#  Wait for next request from client
+		message = socket.recv_string()
 		#print ("CMD:",message)
 		response=processor.cmd(message)
 		#print (response)
-		socket.send(response)
+		socket.send_string(response)
 		time.sleep(0.01)
 
 

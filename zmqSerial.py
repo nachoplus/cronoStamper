@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 Server the event time througth 
 a serial port
@@ -11,7 +11,6 @@ import zmq
 import time
 import os, pty, serial
 import subprocess
-import commands
 from config import *
 
 if __name__ == '__main__':

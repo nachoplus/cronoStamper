@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 HTTP server
 Show several stats and has a littel url interface:
@@ -61,9 +61,9 @@ def clkStatus():
 	os.environ["_CLK_SAMPLES"] = deep
 	#getpeersCMD="chronyc -n sources|grep '^\^'"
 	getpeersCMD='cat  /var/log/chrony/measurements.log |grep -v "PPS"|grep -v "GPS"|grep -v "UTC"|grep -v "="|tr -s " "|cut -d" " -f 3|tail -2'
-	peers=commands.getstatusoutput(getpeersCMD)
+	peers=getstatusoutput(getpeersCMD)
 	print(peers)
-	peers=peers[1].split('\n')
+	peers=peers[1].decode().split('\n')
 	npeers=len(peers)
 	print(npeers,peers)
 	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
@@ -74,8 +74,8 @@ def clkStatus():
 		os.environ["_NTP_INTERNET_PEER1"] = peers[1]
 	path=os.path.dirname(os.path.realpath(__file__))
 	exe=path+'/test/peerGraph.plot  >'+path+'/test/clockStats.png'
-	cmdrst=commands.getstatusoutput(exe)
-	return send_from_directory(directory=path+'/test', filename='clockStats.png', cache_timeout= 0)    
+	cmdrst=getstatusoutput(exe)
+	return send_from_directory(directory=path+'/test', path='clockStats.png')    
 
 @app.route('/clkStatus_ntpd')
 def clkStatus_ntpd():
@@ -84,7 +84,7 @@ def clkStatus_ntpd():
 		deep='200'
 	os.environ["_CLK_SAMPLES"] = deep
 	getpeersCMD="ntpq -np|grep '^+'"
-	peers=commands.getstatusoutput(getpeersCMD)
+	peers=getstatusoutput(getpeersCMD)
 	peers=peers[1].split('\n')
 	npeers=len(peers)
 	print(npeers,peers)
@@ -99,15 +99,15 @@ def clkStatus_ntpd():
 		os.environ["_NTP_INTERNET_PEER1"] = peer
 	path=os.path.dirname(os.path.realpath(__file__))
 	exe=path+'/test/peerGraph_ntpd.plot  >'+path+'/test/clockStats_ntpd.png'
-	cmdrst=commands.getstatusoutput(exe)
+	cmdrst=getstatusoutput(exe)
 	return send_from_directory(directory=path+'/test', filename='clockStats_ntpd.png', cache_timeout= 0)
 
 @app.route('/trigger.json')
 def trigger():
     zmqSocket = context.socket(zmq.REQ)
     zmqSocket.connect("tcp://localhost:%s" % zmqTripPort)
-    zmqSocket.send('NEXT')
-    reply=zmqSocket.recv()
+    zmqSocket.send_string('NEXT')
+    reply=zmqSocket.recv_string()
     zmqSocket.close()
     r={'nextTrip':reply}
     return jsonify(r)
@@ -123,11 +123,11 @@ def lastValue():
 	except:
 		#print "Get:",last
 		msg=last
-    	return msg
+	return msg
 
 def lastGPSValue():
-        from time import gmtime, strftime
-        time=strftime("%H:%M:%S +0000", gmtime())
+	from time import gmtime, strftime
+	time=strftime("%H:%M:%S +0000", gmtime())
 	global lastGPS
 	try:
 		m= socketGPS.recv(flags=zmq.NOBLOCK)
@@ -137,9 +137,9 @@ def lastGPSValue():
 	except:
 		#print "Get:",last
 		msg=lastGPS
-        finally:
-                msg['clktime']=time
-    	return msg
+	finally:
+		msg['clktime']=time
+	return msg
 
 
 if __name__ == '__main__':
@@ -149,14 +149,14 @@ if __name__ == '__main__':
 	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
 	socket.setsockopt(zmq.CONFLATE, 1)
 	socket.connect ("tcp://localhost:%s" % zmqShutterPort)
-	socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
+	socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
 	topicfilter = "GPS"
 	socketGPS = context.socket(zmq.SUB)
 	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
 	socketGPS.setsockopt(zmq.CONFLATE, 1)
 	socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
-	socketGPS.setsockopt(zmq.SUBSCRIBE, topicfilter)
+	socketGPS.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
 
 	#main loop

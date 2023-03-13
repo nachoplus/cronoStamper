@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 TRIP Sockets server- 
 On connect send a string with the 
@@ -12,7 +12,8 @@ import socket
 import sys
 import select
 import time
-from thread import *
+#from thread import *
+import threading
 import zmq
 from config import *
 
@@ -47,29 +48,27 @@ def recv_end(conn):
     End='#'
     total_data=[]
     while True:
-	    time.sleep(0.05)
-    	    data=''
+        time.sleep(0.05)
+        data=''
+        try:	
+            data=conn.recv(1).decode()
+        except:
+            print("socket close")
+            cmd="SOCKET_CLOSE"	
+            break
+        if data=='':
+            cmd="SOCKET_CLOSE"	
+            break
 
-	    try:	
-            	data=conn.recv(1)
-	    except:
-		print("socket close")
-		cmd="SOCKET_CLOSE"	
-		break
-
-	    if data=='':
-		cmd="SOCKET_CLOSE"	
-		break
-
-            if End in data:
-                total_data.append(data[:data.find(End)])
-		cmd=''.join(total_data).replace('\n','').replace('\r','')
-		if len(cmd)==0:
-			continue
-		else:
-			break
-	    else:
-            	total_data.append(data)
+        if End in data:
+            total_data.append(data[:data.find(End)])
+            cmd=''.join(total_data).replace('\n','').replace('\r','')
+            if len(cmd)==0:
+                continue
+            else:
+                break
+        else:
+            total_data.append(data)
 
     #print ("CMD parse:",repr(cmd))
     return cmd
@@ -84,14 +83,14 @@ def clientthread(conn):
    
     #infinite loop so that function do not terminate and thread do not end.
     while RUN:
-	    	cmd=recv_end(conn)
-		if cmd == "SOCKET_CLOSE" or cmd == "EXIT" or cmd == "QUIT":
-			break
-		print ("<-",cmd)
-		zmqSocket.send(cmd)
-		reply=zmqSocket.recv()
-		print ("->",reply)
-    		conn.send(str(reply)+'\n')
+        cmd=recv_end(conn)
+        if cmd == "SOCKET_CLOSE" or cmd == "EXIT" or cmd == "QUIT":
+            break
+        print ("<-",cmd)
+        zmqSocket.send_string(cmd)
+        reply=zmqSocket.recv_string()
+        print ("->",reply)
+        conn.send(f'{reply}\n'.encode())
 
 
     #came out of loop
@@ -102,15 +101,16 @@ def clientthread(conn):
 #now keep talking with the client
 RUN=True
 while RUN:
-  try:
+  if True:
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
     print('Connected with ' + addr[0] + ':' + str(addr[1]))
      
     #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
-    start_new_thread(clientthread ,(conn,))
-
-  except:
+    #start_new_thread(clientthread ,(conn,))
+    t = threading.Thread(target=clientthread,args=(conn,))
+    t.start()
+  else:
     RUN=False
 	
 s.close()

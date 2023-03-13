@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 '''
 Get the timestamp of SIGNAL activation and 
 send a msg througth zmq.PUB
@@ -9,7 +9,6 @@ import pigpio
 import time
 import datetime
 import zmq
-import commands
 import json
 
 from config import *
@@ -30,7 +29,7 @@ pi=pigpio.pi()
 def getPPM():
 	global ppm
 	clkData=getSystemClockData()
-       	ppm=float(clkData['ppm'])
+	ppm=float(clkData['ppm'])
 
 
 
