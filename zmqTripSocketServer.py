@@ -25,21 +25,21 @@ HOST = ''   # Symbolic name meaning all available interfaces
  # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print('Starting Trip TCP server')
-print('Socket created',HOST+":",str(TripPort))
+logging.info('Starting Trip TCP server')
 
 #Bind socket to local host and port
 try:
     s.bind((HOST, TripPort))
+    logging.info(f'Socket created {HOST}:{TripPort}')    
 except socket.error as msg:
-    print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+    logging.error(f'Bind failed. Error Code :{msg[0]} Message {msg[1]}')
     sys.exit()
      
-print('Socket bind complete')
+logging.info('Socket bind completed')
  
 #Start listening on socket
 s.listen(1)
-print('Socket now listening')
+logging.info('Socket now listening')
  
 
 
@@ -53,7 +53,7 @@ def recv_end(conn):
         try:	
             data=conn.recv(1).decode()
         except:
-            print("socket close")
+            logging.warning("socket close")
             cmd="SOCKET_CLOSE"	
             break
         if data=='':
@@ -78,39 +78,46 @@ def clientthread(conn):
     RUN=True
     #  Socket to talk to ZMQserver
     zmqSocket = context.socket(zmq.REQ)
-    zmqSocket.connect("tcp://localhost:%s" % zmqTripPort)
+    zmqSocket.REQ_CORRELATE=True
+    zmqSocket.REQ_RELAXED= True
+    zmqSocket.RCVTIMEO=200
+    zmq_trip_endpoint=f"tcp://localhost:{zmqTripPort}"
+    logging.info(f'Subscribed to TRIP zmq_endpoint:{zmq_trip_endpoint}')
+    zmqSocket.connect(zmq_trip_endpoint)
 
-   
     #infinite loop so that function do not terminate and thread do not end.
     while RUN:
-        cmd=recv_end(conn)
-        if cmd == "SOCKET_CLOSE" or cmd == "EXIT" or cmd == "QUIT":
-            break
-        print ("<-",cmd)
-        zmqSocket.send_string(cmd)
-        reply=zmqSocket.recv_string()
-        print ("->",reply)
-        conn.send(f'{reply}\n'.encode())
-
+        try:
+            cmd=recv_end(conn)
+            if cmd == "SOCKET_CLOSE" or cmd == "EXIT" or cmd == "QUIT":
+                break
+            print ("<-",cmd)
+            zmqSocket.send_string(cmd)
+            reply=zmqSocket.recv_string()
+            print ("->",reply)
+            conn.send(f'{reply}\n'.encode())
+        except:
+            conn.send(f'TRIP DAEMON FAIL\n'.encode())
+            logging.error(f'TRIP DAEMON FAIL\n')
 
     #came out of loop
     #conn.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both
     conn.close()
-    print("Disconnecting..")
+    logging.warning("Disconnecting..")
  
 #now keep talking with the client
 RUN=True
 while RUN:
-  if True:
+  try:
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
-    print('Connected with ' + addr[0] + ':' + str(addr[1]))
+    logging.info(f'Connected with {addr[0]}:{addr[1]}')
      
     #start new thread takes 1st argument as a function name to be run, second is the tuple of arguments to the function.
     #start_new_thread(clientthread ,(conn,))
     t = threading.Thread(target=clientthread,args=(conn,))
     t.start()
-  else:
+  except:
     RUN=False
 	
 s.close()

@@ -30,9 +30,9 @@ class gps2zmq:
 		try:
 			flags= gps.WATCH_ENABLE | gps.WATCH_PPS 
 			self.session = gps.gps(mode=flags)	
-			print("GPSD contacted")
+			logging.info("GPSD contacted")
 		except:
-			print("GPSD not running. Retrying..")
+			logging.warning("GPSD not running. Retrying..")
 
 	def run(self):
 		while True:
@@ -44,7 +44,6 @@ class gps2zmq:
 				if report['class'] == 'TPV':
 					# Do more stuff
 					fix.update(report)
-					#print fix
 					'''
 					while report['class'] != 'SKY':
 						report = self.session.next()
@@ -61,16 +60,18 @@ class gps2zmq:
 					status={'gpsStatus':'OK'}
 					fix.update(status)
 					self.datakeys=fix.keys()
-					print(fix)
+					logging.info(f'GPS mode:{fix["mode"]} time:{fix["time"]}')
+					logging.debug(f'{fix}')
 					socket.send(mogrify('GPS',fix))
 
 			except:
+				logging.error(f'GPSD Fail. Reconnecting...')
 				for key in self.datakeys:
 					fix.update({key:'-'})		
 				fix.update(clk)
 				fix.update({'gpsStatus':'FAIL'})
 				fix.update({'mode':'GPSD FAIL'})	
-				print(fix)
+				logging.debug(fix)
 				socket.send(mogrify('GPS',fix))
 				self.gpsdConnect()
 				time.sleep(1)
@@ -82,7 +83,9 @@ class gps2zmq:
 if __name__ == '__main__':
 	context = zmq.Context()
 	socket = context.socket(zmq.PUB)
-	socket.bind("tcp://*:%s" % zmqGPSPort)
+	zmq_end_point=f"tcp://*:{zmqGPSPort}"
+	socket.bind(zmq_end_point)
+	logging.info(f'Started zmq GPS endpoint -> {zmq_end_point}')	
 	poller=gps2zmq()
 	poller.run()
 

@@ -62,10 +62,9 @@ def clkStatus():
 	#getpeersCMD="chronyc -n sources|grep '^\^'"
 	getpeersCMD='cat  /var/log/chrony/measurements.log |grep -v "PPS"|grep -v "GPS"|grep -v "UTC"|grep -v "="|tr -s " "|cut -d" " -f 3|tail -2'
 	peers=getstatusoutput(getpeersCMD)
-	print(peers)
 	peers=peers[1].decode().split('\n')
 	npeers=len(peers)
-	print(npeers,peers)
+	logging.debug(f'{npeers} peers:{peers}')	
 	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
 	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
 	if npeers>=1:
@@ -87,7 +86,7 @@ def clkStatus_ntpd():
 	peers=getstatusoutput(getpeersCMD)
 	peers=peers[1].split('\n')
 	npeers=len(peers)
-	print(npeers,peers)
+	logging.debug(f'{npeers} peers:{peers}')	
 	os.environ["_NTP_INTERNET_PEER0"] = 'kkk'
 	os.environ["_NTP_INTERNET_PEER1"] = 'kkk'
 	if npeers>=1:
@@ -104,13 +103,15 @@ def clkStatus_ntpd():
 
 @app.route('/trigger.json')
 def trigger():
-    zmqSocket = context.socket(zmq.REQ)
-    zmqSocket.connect("tcp://localhost:%s" % zmqTripPort)
-    zmqSocket.send_string('NEXT')
-    reply=zmqSocket.recv_string()
-    zmqSocket.close()
-    r={'nextTrip':reply}
-    return jsonify(r)
+	try:
+		tripSocket.send_string('NEXT')
+		reply=tripSocket.recv_string()
+	except:
+		reply="TRIP DAEMON FAIL"
+		logging.warning(f'{reply}')
+    #tripSocket.close()
+	r={'nextTrip':reply}
+	return jsonify(r)
 
 
 def lastValue():
@@ -118,10 +119,8 @@ def lastValue():
 	try:
 		m= socket.recv(flags=zmq.NOBLOCK)
 		topic, msg  = demogrify(m)
-		#print "Set:",last
 		last=msg
 	except:
-		#print "Get:",last
 		msg=last
 	return msg
 
@@ -132,10 +131,8 @@ def lastGPSValue():
 	try:
 		m= socketGPS.recv(flags=zmq.NOBLOCK)
 		topic, msg  = demogrify(m)
-		#print "Set:",last
 		lastGPS=msg
 	except:
-		#print "Get:",last
 		msg=lastGPS
 	finally:
 		msg['clktime']=time
@@ -147,18 +144,28 @@ if __name__ == '__main__':
 	topicfilter = ShutterFlange
 	socket = context.socket(zmq.SUB)
 	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+	zmq_shutter_endpoint=f"tcp://localhost:{zmqShutterPort}"
+	logging.info(f'Subscribed to Shutter zmq_endpoint:{zmq_shutter_endpoint} topic:{topicfilter} CONFLATE')
 	socket.setsockopt(zmq.CONFLATE, 1)
-	socket.connect ("tcp://localhost:%s" % zmqShutterPort)
+	socket.connect (zmq_shutter_endpoint)
 	socket.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
-	topicfilter = "GPS"
+	GPStopicfilter = "GPS"
+	zmq_gps_endpoint=f"tcp://localhost:{zmqGPSPort}"	
+	logging.info(f'Subscribed to GPS zmq_endpoint:{zmq_gps_endpoint} topic:{GPStopicfilter} CONFLATE')		
 	socketGPS = context.socket(zmq.SUB)
 	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
 	socketGPS.setsockopt(zmq.CONFLATE, 1)
-	socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
-	socketGPS.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
-
+	socketGPS.connect (zmq_gps_endpoint)
+	socketGPS.setsockopt_string(zmq.SUBSCRIBE, GPStopicfilter)
+	tripSocket = context.socket(zmq.REQ)
+	tripSocket.REQ_CORRELATE=True
+	tripSocket.REQ_RELAXED= True
+	tripSocket.RCVTIMEO=200
+	zmq_trip_endpoint=f"tcp://localhost:{zmqTripPort}"
+	logging.info(f'Subscribed to TRIP zmq_endpoint:{zmq_trip_endpoint}')
+	tripSocket.connect(zmq_trip_endpoint)
 
 	#main loop
-	app.run(host='0.0.0.0',port=httpPort,debug=True)
+	app.run(host='0.0.0.0',port=httpPort,debug=False)
 

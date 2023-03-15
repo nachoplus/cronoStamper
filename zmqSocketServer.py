@@ -23,22 +23,19 @@ HOST = ''   # Symbolic name meaning all available interfaces
 PORT = socketsPort # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print('Starting CronoStamper Sockets Server.')
-print('Socket created')
-
+logging.info('Starting CronoStamper Sockets Server.')
  
 #Bind socket to local host and port
 try:
     s.bind((HOST, PORT))
+    logging.info(f'TCP binded to: {HOST}:{PORT}')
 except socket.error as msg:
-    print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+    logging.error(f'TCP Bind failed. Error Code:{msg[0]} Message:{msg[1]}')
     sys.exit()
      
-print('Socket binding completed')
- 
 #Start listening on socket
 s.listen(10)
-print('Socket now listening')
+logging.info('TCP Socket listening')
  
 nthreads=0
 
@@ -47,7 +44,7 @@ nthreads=0
 #Important: Each thread has to have its own zmq sockets to avoid data corruption
 def clientthread(conn,addr,n):
 	global nthreads
-	print(str(n),str(datetime.datetime.now()),'Connected with ' + addr[0] + ':' + str(addr[1]),"active threads:",nthreads)
+	logging.info(f'Thread:{n}. Connected with {addr[0]}:{addr[1]} active threads:{nthreads}')
 
 	#ZMQ context
 	context = zmq.Context()
@@ -56,16 +53,20 @@ def clientthread(conn,addr,n):
 	topicfilter = ShutterFlange
 	socketShutter = context.socket(zmq.SUB)
 	#only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+	zmq_shutter_endpoint=f"tcp://localhost:{zmqShutterPort}"
+	logging.info(f'Subscribed to zmq_endpoint:{zmq_shutter_endpoint} topic:{topicfilter} CONFLATE')
 	socketShutter.setsockopt(zmq.CONFLATE, 1)
-	socketShutter.connect ("tcp://localhost:%s" % zmqShutterPort)
+	socketShutter.connect (zmq_shutter_endpoint)
 	socketShutter.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
 	#Subscribe to gps and clock zmq queue
 	GPStopicfilter = "GPS"
 	socketGPS = context.socket(zmq.SUB)
 	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
+	zmq_gps_endpoint=f"tcp://localhost:{zmqGPSPort}"	
+	logging.info(f'Subscribed to zmq_endpoint:{zmq_gps_endpoint} topic:{GPStopicfilter} CONFLATE')	
 	socketGPS.setsockopt(zmq.CONFLATE, 1)
-	socketGPS.connect ("tcp://localhost:%s" % zmqGPSPort)
+	socketGPS.connect (zmq_gps_endpoint)
 	socketGPS.setsockopt_string(zmq.SUBSCRIBE, GPStopicfilter)
 
 	lastGPS={}
@@ -103,11 +104,11 @@ def clientthread(conn,addr,n):
 		#catch the send reply to manage if client close the socket
 		try:
 			conn.sendall(reply.encode())
-			print (str(n),reply)	
+			logging.debug(f'{addr[0]}:{addr[1]}<-{reply}')	
 		except:     
 			#came out of loop. close socket and thread
 			nthreads-=1
-			print(str(n),str(datetime.datetime.now()),'Disconnected:' + addr[0] + ':' + str(addr[1]),"remain active threads:",nthreads)
+			logging.warning(f'Thread:{n}. Disconnected from {addr[0]}:{addr[1]} remain active threads:{nthreads}')
 			conn.close()
 			socketShutter.close()
 			socketGPS.close()
@@ -120,6 +121,7 @@ def clientthread(conn,addr,n):
  
 #now keep talking with the client
 while True:
+    logging.info(f'Waiting for a new connecting')
     #wait to accept a connection - blocking call
     conn, addr = s.accept()
 

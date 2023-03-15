@@ -34,14 +34,14 @@ def trip():
 		while RTCtripList[0]<RTCsecond+1:
 			RTCtripList.remove(RTCtripList[0])
 	except:
-		print("Trip list empty")
+		logging.info("Trip list empty")
 	if len(RTCtripList)==0:
 		return False
 	RTCtrip=RTCtripList[0]
 	delta=RTCtrip-RTCsecond
 	if delta>=1-margin and delta<2.-margin :
-		print("RTC:",RTCtrip,RTCsecond,delta)
-		print("FIRE!")
+		logging.info("RTC:",RTCtrip,RTCsecond,delta)
+		logging.info("FIRE!")
 		return True
 	else:
 		return False
@@ -241,21 +241,23 @@ if __name__ == '__main__':
 	processor=cmdProcesor()
 	context = zmq.Context()
 	socket = context.socket(zmq.REP)
-	socket.bind("tcp://*:%s" % zmqTripPort)
+	zmq_end_point=f"tcp://*:{zmqTripPort}"
+	socket.bind(zmq_end_point)
+	logging.info(f'Started zmq TRIP endpoint -> {zmq_end_point}')		
 	getSystemClockData()
 	pi.wave_clear()
 	pi.set_mode(TRIP_WAVE_REF_GPIO,pigpio.OUTPUT)
 	pi.set_mode(TRIP_GPIO,pigpio.OUTPUT)
 	cb1 = pi.callback(TRIP_WAVE_REF_GPIO, pigpio.RISING_EDGE, getWaveTick)
 	cb2 = pi.callback(PPS_GPIO, pigpio.RISING_EDGE, discipline)
-	print ("INIT: Waiting for a PPS signal.")
+	logging.info("INIT: Waiting for a PPS signal.")
 
 	while True:
 		#  Wait for next request from client
 		message = socket.recv_string()
-		#print ("CMD:",message)
+		logging.info(f"CMD:{message}")
 		response=processor.cmd(message)
-		#print (response)
+		logging.info(f'RESPONSE:{response}')
 		socket.send_string(response)
 		time.sleep(0.01)
 
