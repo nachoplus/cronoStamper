@@ -1,4 +1,4 @@
-pigpio
-zmq
+#pigpio #Now installed with apt
+#zmq #Now installed with apt
 flask
 gps
