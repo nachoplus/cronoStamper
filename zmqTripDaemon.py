@@ -53,7 +53,7 @@ def checkWaveBuffer():
 	CBS=pi.wave_get_cbs()
 	Pulse=pi.wave_get_pulses()
 	Micros=pi.wave_get_micros()
-	print ("CBS, Pulses, Micros:",CBS,'/',maxCBS,Pulse,'/',maxPulse,Micros,'/',maxMicros)
+	logging.debug(f"CBS:{CBS}/{maxCBS}, Pulses:{Pulse}/{maxPulse}, Micros:{Micros}/{maxMicros}")
 
 def defwave(gpio,preamble,pulse,postamble):
 	syncwave=[]	
@@ -75,7 +75,7 @@ def sendWave():
 		postamble=(wavelength-pulse)-slash-preamble
 		if postamble<0:
 			postamble=0
-		print("TRIP",preamble,pulse,postamble,RTCsecond)
+		logging.debug(f'TRIP {preamble},{pulse},{postamble},{RTCsecond}')
 		defwave(TRIP_GPIO,preamble,pulse,postamble)
 	wid= pi.wave_create()
 	

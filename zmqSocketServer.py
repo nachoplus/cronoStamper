@@ -59,48 +59,24 @@ def clientthread(conn,addr,n):
 	socketShutter.connect (zmq_shutter_endpoint)
 	socketShutter.setsockopt_string(zmq.SUBSCRIBE, topicfilter)
 
-	#Subscribe to gps and clock zmq queue
-	GPStopicfilter = "GPS"
-	socketGPS = context.socket(zmq.SUB)
-	#CONFLATE: get only one message (do not work with the stock version of zmq, works from ver 4.1.4)
-	zmq_gps_endpoint=f"tcp://localhost:{zmqGPSPort}"	
-	logging.info(f'Subscribed to zmq_endpoint:{zmq_gps_endpoint} topic:{GPStopicfilter} CONFLATE')	
-	socketGPS.setsockopt(zmq.CONFLATE, 1)
-	socketGPS.connect (zmq_gps_endpoint)
-	socketGPS.setsockopt_string(zmq.SUBSCRIBE, GPStopicfilter)
-
-	lastGPS={}
-
 
 	#Sending message to connected client
 	#conn.send('OK.CronoStamper socket server.\n') #send only takes string
 		
 	#infinite loop so that function do not terminate and thread do not end.
 	while True:
+		#get clock data
+		clkData=getSystemClockData()
 		#get shutter time
 		m= socketShutter.recv()
 		topic, msg  = demogrify(m)
 
-		#try get GPS and time data. If fail return last avalilable
-		try:
-			GPSm= socketGPS.recv(flags=zmq.NOBLOCK)
-			topic, GPSmsg  = demogrify(GPSm)
-			lastGPS=GPSmsg
-			msgGPS = GPSmsg
-		except:
-			msgGPS = lastGPS
-
-
 		#format the reply string
-		ppsOK=0
-		clkError=9999.
-		try:
-			if msgGPS['ppsOK']:
-				ppsOK=1
-			clkError=float(msgGPS['ClkError'])
-		except:
-			pass
-		reply = "%s %010.6f %01.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],ppsOK,clkError)
+		if 'ClkMaxError' in clkData:
+			clkError=clkData['ClkMaxError']
+		else:
+			clkError=9999.
+		reply = "%s %010.6f %01.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],msg['shutterOK'],clkError)
 		#catch the send reply to manage if client close the socket
 		try:
 			conn.sendall(reply.encode())
@@ -111,7 +87,6 @@ def clientthread(conn,addr,n):
 			logging.warning(f'Thread:{n}. Disconnected from {addr[0]}:{addr[1]} remain active threads:{nthreads}')
 			conn.close()
 			socketShutter.close()
-			socketGPS.close()
 			break
 		
 

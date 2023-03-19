@@ -36,8 +36,8 @@ class gps2zmq:
 
 	def run(self):
 		while True:
-			clk=getSystemClockData()
-			fix=dict(clk)
+			#clk=getSystemClockData()
+			fix=dict()
 			try:
 				# Do stuff
 				report = self.session.next()
@@ -57,10 +57,17 @@ class gps2zmq:
 						nsat={'nsat':f'{str(uses)}/{str(len(sats))}','satellites':sats}
 						fix.update(nsat)					
 					'''
-					status={'gpsStatus':'OK'}
-					fix.update(status)
 					self.datakeys=fix.keys()
-					logging.info(f'GPS mode:{fix["mode"]} time:{fix["time"]}')
+					if 'time' in fix:
+						status={'gpsOK':True}						
+						logging.info(f'GPS mode:{fix["mode"]} time:{fix["time"]}')
+					else:
+						status={'gpsOK':False,"mode":0}
+						logging.info(f'NOT TIME YET')
+					fix.update(status)												
+					if 'mode' in fix:
+						mode_map={0:'INIT',1:'TIME ONLY',2:'2D FIX',3:'3D FIX(OK)'}
+						fix.update({'mode_str':mode_map[fix['mode']]})
 					logging.debug(f'{fix}')
 					socket.send(mogrify('GPS',fix))
 
@@ -68,9 +75,8 @@ class gps2zmq:
 				logging.error(f'GPSD Fail. Reconnecting...')
 				for key in self.datakeys:
 					fix.update({key:'-'})		
-				fix.update(clk)
-				fix.update({'gpsStatus':'FAIL'})
-				fix.update({'mode':'GPSD FAIL'})	
+				fix.update({'gpsOK':False})
+				fix.update({'mode_str':'GPSD FAIL'})	
 				logging.debug(fix)
 				socket.send(mogrify('GPS',fix))
 				self.gpsdConnect()

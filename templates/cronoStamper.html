@@ -10,15 +10,16 @@
 <script type="text/javascript" src="{{ url_for('static',filename='jqplot.dateAxisRenderer.min.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static',filename='jquery.jqplot.min.css') }}" type="text/css" />
 <script>
-var plot1;
-var plot2;
+var plot_maxerror;
+var plot_RMSoffset;
 var plot_gps;
 var options;
 var t = 1000;
 var x = (new Date()).getTime(); // current time
 var n = 60;
 
-var primera=true;
+var primeraGPS=true;
+var primeraCkl=true;
 data_pllOffset = []
 data_ClkError = []
 data_gps = []
@@ -38,8 +39,6 @@ y0=y0/e;
 var newdarray =  darray.map(function(value,index) { return [value[0]-x0,value[1]-y0]; });
 return newdarray;    
 }
-
-
 
 function updateTrigger() {
  $.ajax({
@@ -61,6 +60,143 @@ function updateTrigger() {
     // the response is passed to the function
     success: function( data ) {	
 	$('#NEXT_TRIP').text(data.nextTrip);
+    if (data.triggerOK) {
+        $("#triggertable tr:first-child td").css( "background-color", "56aa56" );        
+	} else {
+        $("#triggertable tr:first-child td").css( "background-color", "red" );
+	}    
+    },
+ 
+    // code to run if the request fails; the raw request and
+    // status codes are passed to the function
+    error: function( xhr, status ) {
+        //alert( "Sorry, there was a problem!" );
+    },
+ 
+    // code to run regardless of success or failure
+    complete: function( xhr, status ) {
+ 
+    }
+    });
+
+    };
+
+
+function updateClock() {
+ $.ajax({
+    // the URL for the request
+    url: "/clock.json",
+ 
+    // the data to send (will be converted to a query string)
+    data: {
+
+    },
+	 
+    // whether this is a POST or GET request
+    type: "GET",
+ 
+    // the type of data we expect back
+    dataType : "json",
+ 
+    // code to run if the request succeeds;
+    // the response is passed to the function
+    success: function( data ) {	
+        $('#PLLOFFSET').text(data.pllOffset);
+        $('#PPM').text(data.ppm);
+        $('#CLKERROR').text(data.ClkError);
+        $('#CLKMAXERROR').text(data.ClkMaxError);
+        $('#CLKSOURCE').text(data.clkReferenceID);
+        $('#CLKTIME').text(data.clktime);
+
+        var x = (new Date()).getTime();
+
+	if (data.ppsOK) {
+		$("#CLKSOURCE").css("color","#0a0")
+		$("#CLKSOURCE").css("font-weight","normal")
+		//$(".ShutterTime").css( "border", "1px solid black" );
+        $("#clocktable tr:first-child td").css( "background-color", "56aa56" );        
+		$("#READY").css("color","#0a0")
+		$("#READY").text('READY')
+	} else {
+		$("#CLKSOURCE").css("color","#c00")
+		$("#CLKSOURCE").css("font-weight","bold")
+		//$(".ShutterTime").css( "border", "3px solid red" );
+        $("#clocktable tr:first-child td").css( "background-color", "red" );
+		$("#READY").css("color","#c00")
+		$("#READY").text('NOT READY')
+	}
+
+	if (primeraCkl==true) {
+	   for(i=0; i<n; i++){  
+	      	if(data_pllOffset.length > n-1){
+	        	data_pllOffset.shift();
+	      	}
+	      	if(data_ClkError.length > n-1){
+		         data_ClkError.shift();
+	      	}
+	      	data_pllOffset.push([x - (n-1-i)*t,data.ClkMaxError]);  
+	      	data_ClkError.push([x - (n-1-i)*t,data.pllOffset]);  
+	   }   
+        }
+      
+
+      if(data_pllOffset.length > n-1){
+         data_pllOffset.shift();
+      }
+      if(data_ClkError.length > n-1){
+         data_ClkError.shift();
+      }
+
+      var y = Number(data.ClkMaxError);
+      data_pllOffset.push([x,y]);
+      if (plot_maxerror) {
+    	plot_maxerror.destroy();
+      }
+      options.title='CLOCK: max error in microseconds (wait until < 100)'
+      plot_maxerror.series[0].data = data_pllOffset; 
+      options.axes.xaxis.min = data_pllOffset[0][0];
+      options.axes.xaxis.max = data_pllOffset[data_pllOffset.length-1][0];
+      var yy =  data_pllOffset.map(function(value,index) { return value[1]; });
+      var ymin=Math.min.apply(null,yy);
+      var ymax=Math.max.apply(null,yy);
+      margen=(ymax-ymin)/10.;
+      if (margen==0) {
+		margen=ymax/10;
+      }	
+      if (margen==0) {
+		margen=0.0001;
+      }      
+      media=(ymax+ymin)/2;
+      options.axes.yaxis.min = ymin-margen;
+      options.axes.yaxis.max = ymax+margen;
+
+      plot_maxerror = $.jqplot ('pllOffset', [data_pllOffset],options);
+
+      var y = Number(data.pllOffset);
+      data_ClkError.push([x,y]);
+      if (plot_RMSoffset) {
+    	plot_RMSoffset.destroy();
+      }
+      options.title='CLOCK: RMS offset from UTC (microseconds)'
+      plot_RMSoffset.series[0].data = data_ClkError; 
+      options.axes.xaxis.min = data_ClkError[0][0];
+      options.axes.xaxis.max = data_ClkError[data_ClkError.length-1][0];
+      var yy =  data_ClkError.map(function(value,index) { return value[1]; });
+      var ymin=Math.min.apply(null,yy);
+      var ymax=Math.max.apply(null,yy);
+      margen=(ymax-ymin)/10.;
+      if (margen==0) {
+		margen=ymax/10;
+      }	
+      media=(ymax+ymin)/2;
+      options.axes.yaxis.min = ymin-margen;
+      options.axes.yaxis.max = ymax+margen;
+
+      plot_RMSoffset = $.jqplot ('ClkError', [data_ClkError],options);
+
+      primeraCkl=false;    
+
+
     },
  
     // code to run if the request fails; the raw request and
@@ -103,8 +239,13 @@ function updateShutter() {
 	$('#UNIXTIME').text(data.unixUTC);
 	$('#MJD').text(data.MJD);
 	$('#PULSE').text(data.pulse);
-    },
- 
+
+    if (data.shutterOK) {
+        $("#shuttertable tr:first-child td").css( "background-color", "56aa56" );        
+	} else {
+        $("#shuttertable tr:first-child td").css( "background-color", "red" );
+	}
+    },    
     // code to run if the request fails; the raw request and
     // status codes are passed to the function
     error: function( xhr, status ) {
@@ -139,117 +280,35 @@ function updateGPS() {
     // the response is passed to the function
     success: function( data ) {	
 
-	$('#MODE').text(data.mode);
+	$('#MODE').text(data.mode_str);
+	$('#GPSTIME').text(data.time);    
 	$('#LATITUD').text(data.lat);
 	$('#LONGITUD').text(data.lon);
 	$('#ALTITUDE').text(data.alt);
 	$('#EPX').text(data.epx);
 	$('#EPY').text(data.epy);
 	$('#EPV').text(data.epv);
-
-
-	$('#PLLOFFSET').text(data.pllOffset);
-	$('#PPM').text(data.ppm);
-	$('#CLKERROR').text(data.ClkError);
-	$('#CLKMAXERROR').text(data.ClkMaxError);
-	$('#CLKSOURCE').text(data.clkReferenceID);
-	$('#CLKTIME').text(data.clktime);
-
-        var x = (new Date()).getTime();
-
-	if (data.ppsOK) {
-		$("#CLKSOURCE").css("color","#0a0")
-		$("#CLKSOURCE").css("font-weight","normal")
-		$(".ShutterTime").css( "border", "1px solid black" );
-		$("#READY").css("color","#0a0")
-		$("#READY").text('READY')
+	if (data.gpsOK) {
+        $("#gpstable tr:first-child td").css( "background-color", "56aa56" );        
 	} else {
-		$("#CLKSOURCE").css("color","#c00")
-		$("#CLKSOURCE").css("font-weight","bold")
-		$(".ShutterTime").css( "border", "3px solid red" );
-		$("#READY").css("color","#c00")
-		$("#READY").text('NOT READY')
+        $("#gpstable tr:first-child td").css( "background-color", "red" );
 	}
+    var R=6371000;
 
-     var R=6371000;
-
-	if (primera==true) {
+	if (primeraGPS==true) {
 	   for(i=0; i<n; i++){  
-	      	if(data_pllOffset.length > n-1){
-	        	data_pllOffset.shift();
-	      	}
-	      	if(data_ClkError.length > n-1){
-		         data_ClkError.shift();
-	      	}
 	      	if(data_gps.length > n-1){
 		         data_gps.shift();
 	      	}
-	      	data_pllOffset.push([x - (n-1-i)*t,data.ClkMaxError]);  
-	      	data_ClkError.push([x - (n-1-i)*t,data.pllOffset]);  
 	        var xinit = Number(data.lat)*Math.PI/180.*R;
-		var yinit = Number(data.lon)*Math.PI/180.*R*Math.cos(Number(data.lat)*Math.PI/180.);
-                data_gps.push([yinit,xinit]); 
+		    var yinit = Number(data.lon)*Math.PI/180.*R*Math.cos(Number(data.lat)*Math.PI/180.);
+            data_gps.push([yinit,xinit]); 
 	   }   
         }
       
-
-      if(data_pllOffset.length > n-1){
-         data_pllOffset.shift();
-      }
-      if(data_ClkError.length > n-1){
-         data_ClkError.shift();
-      }
       if(data_gps.length > n-1){
          data_gps.shift();
       }
-
-
-      var y = Number(data.ClkMaxError);
-      data_pllOffset.push([x,y]);
-      if (plot1) {
-    	plot1.destroy();
-      }
-      options.title='CLOCK: max error in microseconds (wait until < 100)'
-      plot1.series[0].data = data_pllOffset; 
-      options.axes.xaxis.min = data_pllOffset[0][0];
-      options.axes.xaxis.max = data_pllOffset[data_pllOffset.length-1][0];
-      var yy =  data_pllOffset.map(function(value,index) { return value[1]; });
-      var ymin=Math.min.apply(null,yy);
-      var ymax=Math.max.apply(null,yy);
-      margen=(ymax-ymin)/10.;
-      if (margen==0) {
-		margen=ymax/10;
-      }	
-      if (margen==0) {
-		margen=0.0001;
-      }      
-      media=(ymax+ymin)/2;
-      options.axes.yaxis.min = ymin-margen;
-      options.axes.yaxis.max = ymax+margen;
-
-      plot1 = $.jqplot ('pllOffset', [data_pllOffset],options);
-
-      var y = Number(data.pllOffset);
-      data_ClkError.push([x,y]);
-      if (plot2) {
-    	plot2.destroy();
-      }
-      options.title='CLOCK: RMS offset from UTC (microseconds)'
-      plot2.series[0].data = data_ClkError; 
-      options.axes.xaxis.min = data_ClkError[0][0];
-      options.axes.xaxis.max = data_ClkError[data_ClkError.length-1][0];
-      var yy =  data_ClkError.map(function(value,index) { return value[1]; });
-      var ymin=Math.min.apply(null,yy);
-      var ymax=Math.max.apply(null,yy);
-      margen=(ymax-ymin)/10.;
-      if (margen==0) {
-		margen=ymax/10;
-      }	
-      media=(ymax+ymin)/2;
-      options.axes.yaxis.min = ymin-margen;
-      options.axes.yaxis.max = ymax+margen;
-
-      plot2 = $.jqplot ('ClkError', [data_ClkError],options);
 
 
       var x = Number(data.lat)*Math.PI/180.*R;
@@ -297,7 +356,7 @@ function updateGPS() {
       GPSoptions.seriesDefaults.color=col;
 
       plot_gps = $.jqplot ('GPS', [data_gps0],GPSoptions);
-      primera=false;
+      primeraGPS=false;
 
     },
  
@@ -316,7 +375,8 @@ function updateGPS() {
     };
 
 function updater() {
-			updateShutter();
+            updateClock();
+            updateShutter();
 			updateGPS();
 			updateTrigger();
                    };
@@ -375,8 +435,8 @@ $(document).ready(function() {
       }  
    }; 
  
-   plot1 = $.jqplot ('pllOffset', [data_pllOffset],options); 
-   plot2 = $.jqplot ('ClkError', [data_ClkError],options);    
+   plot_maxerror = $.jqplot ('pllOffset', [data_pllOffset],options); 
+   plot_RMSoffset = $.jqplot ('ClkError', [data_ClkError],options);    
    plot_gps = $.jqplot ('GPS', [data_gps],GPSoptions); 
 
    setInterval(updater, 1000);
@@ -385,132 +445,141 @@ $(document).ready(function() {
  
 </HEAD>
 <BODY>
-<table>
+<table aling="'center" class='container'>
 <tr>
     <div align="center">
-        <p>
-           <a href='https://github.com/nachoplus/cronoStamper'>cronoStamper</a> by N+
-        <hr>
-	<h1 >{{ camera.name }}</h1>
-	<h2 id='READY'></h2>
+
+        <table aling="center" class='container'>
+            <tr>
+            <td width="200">
+                {% set im=url_for('static',filename= camera.jpg  ) %}
+                <img id='camera' src={{ im }} width="200"></img>
+            </td>
+            <td align="left">
+                <h1 >{{ camera.name }}</h1>                
+                <h2 id='READY'></h2>            
+            </td>
+            </tr>
+        </table>
     </div>
 </tr>
 </table>
-<table class='container'>
+<table class='container' >
 <tr>
-<td>
-{% set im=url_for('static',filename= camera.jpg  ) %}
-<img id='camera' src={{ im }} ></img>
-<div id='READY'></div>
-</td>
-<td>
-<table align='center' class='ShutterTime'  >
-<tr><td colspan="2">
-SHUTTER
-</td>
-<tr><td >NEXT TRIP</td><td  width="200">
-    <div id="NEXT_TRIP" align="left"></div>
-</td></tr>
-<tr><td >DATE</td><td>
-    <div id="DATE" align="left"></div>
-</td></tr>
-<tr><td>UNIX TIME</td><td>
-    <div id="UNIXTIME" align="left"></div>
-</td></tr>
-<tr><td>MJD</td><td>
-    <div id="MJD" align="left"></div>
-</td></tr>
-<tr><td>Pulse Width</td><td>
-    <div id="PULSE" align="left"></div>
-</td></tr>
-</table>
-</td>
-
-<td>
-<table align='center' class='ShutterTime'>
-<tr><td colspan="2">
-GPS
-</td>
-<tr><td>MODE (0=INIT, 1=NO FIX, 2= 2D FIX, 3 = 3D FIX)</td><td width="100">
-    <div id="MODE" align="left"></div>
-</td></tr>
-<tr><td>LATITUD</td><td>
-    <div id="LATITUD" align="left"></div>
-</td></tr>
-<tr><td>LONGITUD</td><td>
-    <div id="LONGITUD" align="left"></div>
-</td></tr>
-<tr><td>ALTITUDE</td><td>
-    <div id="ALTITUDE" align="left"></div>
-</td></tr>
-<tr><td >X Error (m) 95% Confidence</td><td>
-    <div id="EPX" align="left"></div>
-</td></tr>
-<tr><td >Y Error (m) 95% Confidence</td><td>
-    <div id="EPY" align="left"></div>
-</td></tr>
-<tr><td >Vertical Error (m) 95% Confidence</td><td>
-    <div id="EPV" align="left"></div>
-</td></tr>
-</table>
-</td>
-
-
-<td>
-<table align='center' class='ShutterTime'>
-<tr><td colspan="2">
-CLOCK <a href='clkStatus'>(graphs)</a>
-</td>
-<tr><td >CLOCK TIME (UTC)</td><td>
-    <div id="CLKTIME" align="left"></div>
-</td></tr>
-<tr><td >Clock source (wait until equal to 'PPS')</td><td>
-    <div id="CLKSOURCE" align="left"></div>
-</td></tr>
-<tr><td >Clock RMS offset from UTC (microseconds)</td><td>
-    <div id="PLLOFFSET" align="left"></div>
-</td></tr>
-<tr><td >Frequency Correction (ppm==microsecond/s)</td><td>
-    <div id="PPM" align="left"></div>
-</td></tr>
-<tr><td>Clock current Error (microseconds)</td><td>
-    <div id="CLKERROR" align="left"></div>
-</td></tr>
-<tr><td>Clock Max Error (microseconds)</td><td>
-    <div id="CLKMAXERROR" align="left"></div>
-</td></tr>
-</table>
-</td>
-
-
-
-
+    <td>
+        <table align="center" class='container'>
+            <tr>
+                <td>
+                <table align='center' class='ShutterTime' id="shuttertable" >
+                    <tr><td colspan="2">
+                    SHUTTER
+                    </td>
+                    <tr><td >DATE</td><td>
+                        <div id="DATE" align="left"></div>
+                    </td></tr>
+                    <tr><td>UNIX TIME</td><td>
+                        <div id="UNIXTIME" align="left"></div>
+                    </td></tr>
+                    <tr><td>MJD</td><td>
+                        <div id="MJD" align="left"></div>
+                    </td></tr>
+                    <tr><td>Pulse Width</td><td>
+                        <div id="PULSE" align="left"></div>
+                    </td></tr>
+                </table>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                <table align='center' class='ShutterTime' id="triggertable" >
+                    <tr><td colspan="2">
+                    TRIGGER
+                    </td>
+                    <tr>
+                        <td >NEXT TRIP</td><td  width="200">
+                        <div id="NEXT_TRIP" align="left"></div>
+                    </td>
+                    </tr>
+                </table>
+                </td>
+            </tr>    
+        </table>
+    </td>
+    <td>
+        <table align='center' class='ShutterTime' id="gpstable">
+            <tr><td colspan="2">
+            GPS
+            </td>
+            <tr><td>MODE</td><td width="100">
+                <div id="MODE" align="left"></div>
+            </td></tr>
+            <tr><td>GPS TIME</td><td>
+                <div id="GPSTIME" align="left"></div>
+            </td></tr>
+            <tr><td>LATITUD</td><td>
+                <div id="LATITUD" align="left"></div>
+            </td></tr>
+            <tr><td>LONGITUD</td><td>
+                <div id="LONGITUD" align="left"></div>
+            </td></tr>
+            <tr><td>ALTITUDE</td><td>
+                <div id="ALTITUDE" align="left"></div>
+            </td></tr>
+            <tr><td >X Error (m) 95% Confidence</td><td>
+                <div id="EPX" align="left"></div>
+            </td></tr>
+            <tr><td >Y Error (m) 95% Confidence</td><td>
+                <div id="EPY" align="left"></div>
+            </td></tr>
+            <tr><td >Vertical Error (m) 95% Confidence</td><td>
+                <div id="EPV" align="left"></div>
+            </td></tr>
+        </table>
+    </td>
+    <td>
+        <table align='center' class='ShutterTime' id="clocktable">
+            <tr><td colspan="2">
+            CLOCK <a href='clkStatus'>(graphs)</a>
+            </td>
+            <tr><td >CLOCK TIME (UTC)</td><td>
+                <div id="CLKTIME" align="left"></div>
+            </td></tr>
+            <tr><td >Clock source (wait until equal to 'PPS')</td><td>
+                <div id="CLKSOURCE" align="left"></div>
+            </td></tr>
+            <tr><td >Clock RMS offset from UTC (microseconds)</td><td>
+                <div id="PLLOFFSET" align="left"></div>
+            </td></tr>
+            <tr><td >Frequency Correction (ppm==microsecond/s)</td><td>
+                <div id="PPM" align="left"></div>
+            </td></tr>
+            <tr><td>Clock current Error (microseconds)</td><td>
+                <div id="CLKERROR" align="left"></div>
+            </td></tr>
+            <tr><td>Clock Max Error (microseconds)</td><td>
+                <div id="CLKMAXERROR" align="left"></div>
+            </td></tr>
+        </table>
+    </td>
+</tr>
+    <table class='container' align='center'>
+        <tr>
+        <td>
+        <div id="pllOffset" style="height:100%; width:100%;"></div>
+        </td>
+        <td>
+        <div id="GPS" style="height:100%; width:100%;"></div>
+        </td>
+        <td>
+        <div id="ClkError" style="height:100%; width:100%"></div>
+        </td>
+        </tr>
+    </table>
 </tr>
 </table>
-
-</table>
-<table class='container'>
-<tr>
-<td>
-<div id="pllOffset" style="height:100%; width:100%;"></div>
-</td>
-<td>
-<div id="GPS" style="height:100%; width:100%;"></div>
-</td>
-<td>
-<div id="ClkError" style="height:100%; width:100%"></div>
-</td>
-
-</tr>
-
-</table>
-
-
-
-
-
-
-
+<hr>
+<p>
+<a href='https://github.com/nachoplus/cronoStamper'>cronoStamper</a> by N+
 
 
 

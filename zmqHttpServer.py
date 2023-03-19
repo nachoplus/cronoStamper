@@ -28,6 +28,14 @@ def index():
 def help():
     return render_template('help.html')
 
+@app.route('/clock.json')
+def clock():
+	from time import gmtime, strftime
+	time=strftime("%Y-%m-%d %H:%M:%S", gmtime())
+	msg=getSystemClockData()
+	msg['clktime']=time
+	return msg
+
 @app.route('/gps.json')
 def gps_json():
 	return jsonify(lastGPSValue())
@@ -106,11 +114,12 @@ def trigger():
 	try:
 		tripSocket.send_string('NEXT')
 		reply=tripSocket.recv_string()
+		triggerOK=True
 	except:
 		reply="TRIP DAEMON FAIL"
-		logging.warning(f'{reply}')
-    #tripSocket.close()
-	r={'nextTrip':reply}
+		triggerOK=False
+	r={'nextTrip':reply,'triggerOK':triggerOK}
+	logging.debug(f'{r}')	
 	return jsonify(r)
 
 
@@ -122,11 +131,10 @@ def lastValue():
 		last=msg
 	except:
 		msg=last
+
 	return msg
 
 def lastGPSValue():
-	from time import gmtime, strftime
-	time=strftime("%H:%M:%S +0000", gmtime())
 	global lastGPS
 	try:
 		m= socketGPS.recv(flags=zmq.NOBLOCK)
@@ -134,8 +142,7 @@ def lastGPSValue():
 		lastGPS=msg
 	except:
 		msg=lastGPS
-	finally:
-		msg['clktime']=time
+
 	return msg
 
 

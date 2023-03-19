@@ -18,6 +18,7 @@ RTCsecond=0
 RTCtick=0
 
 ppm=0
+shutterOK=False
 lastHIGH=0
 lastLOW=0
 
@@ -30,6 +31,7 @@ def getPPM():
 	global ppm
 	clkData=getSystemClockData()
 	ppm=float(clkData['ppm'])
+
 
 
 #get data to correlate system time with the CPU ticks
@@ -52,7 +54,13 @@ def discipline(gpio, level, tick):
 
 #corrected RTCsecond,RTCtick and ppm 
 def ticks2unixUTC(tick):
-	global RTCsecond,RTCtick,ppm
+	global RTCsecond,RTCtick,ppm,shutterOK
+	nowSecond=int(round(time.time()))
+	#OK if PPS signal is not far than 1second
+	if nowSecond-RTCsecond<2:
+		shutterOK=True
+	else:
+		shutterOK=False
 	tickOffset=pigpio.tickDiff(RTCtick, tick)
 	#print(RTCsecond,RTCtick,tick,tickOffset)
 	bias=ppm*(tickOffset/1000000.)
@@ -62,7 +70,7 @@ def ticks2unixUTC(tick):
 
 #get UTC timestamp for the incoming pulse
 def GPIOshutter(gpio, level, tick):
-	global lastHIGH,lastLOW
+	global lastHIGH,lastLOW,shutterOK
 	unixUTC=ticks2unixUTC(tick)
 	if level == 1:
 		#INVERTED LOGIC
@@ -86,8 +94,8 @@ def GPIOshutter(gpio, level, tick):
 	pulse=round(pulse,6)
 	dateUTC=unixTime2date(unixUTC_)
 	MJD=unixTime2MJD(unixUTC_)
-	msg = {'tick':tick,'level':level,'unixUTC':unixUTC_,'dateUTC':dateUTC,'MJD':MJD,'pulse':pulse}
-	logging.info(f'TRIPPED:{msg["dateUTC"]}')
+	msg = {'tick':tick,'level':level,'unixUTC':unixUTC_,'dateUTC':dateUTC,'MJD':MJD,'pulse':pulse,'shutterOK':shutterOK}
+	logging.info(f'SHUTTER TRIPPED:{dateUTC} PULSE:{pulse:05.6f} LEVEL:{level} OK:{shutterOK}')
 	logging.debug(f'msg:{msg}')
 	socket.send(mogrify(topic,msg))
 
