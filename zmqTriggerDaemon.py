@@ -40,8 +40,7 @@ def trip():
 	RTCtrip=RTCtripList[0]
 	delta=RTCtrip-RTCsecond
 	if delta>=1-margin and delta<2.-margin :
-		logging.info("RTC:",RTCtrip,RTCsecond,delta)
-		logging.info("FIRE!")
+		logging.info(f"FIRE! RTC:{RTCtrip},{RTCsecond},{delta}")
 		return True
 	else:
 		return False
@@ -57,9 +56,10 @@ def checkWaveBuffer():
 
 def defwave(gpio,preamble,pulse,postamble):
 	syncwave=[]	
-	syncwave.append(pigpio.pulse(0,1 << gpio, preamble))
-	syncwave.append(pigpio.pulse(1 << gpio,0, pulse))
-	syncwave.append(pigpio.pulse(0, 1 << gpio, postamble))
+	syncwave.append(pigpio.pulse(0, 1 << gpio, int(preamble)))
+	syncwave.append(pigpio.pulse(1 << gpio,0, int(pulse)))
+	syncwave.append(pigpio.pulse(0, 1 << gpio, int(postamble)))
+	logging.debug(f'sendwave {preamble},{pulse},{postamble}')
 	pi.wave_add_generic(syncwave)
 
 def sendWave():
@@ -92,9 +92,9 @@ def getWaveTick(gpio, level, tick):
 	offset=pigpio.tickDiff(RTCtick+locus,waveTick) 
 	if offset>=4200000000:
 		offset=-pigpio.tickDiff(waveTick,RTCtick+locus) 
-	print ("->OFFSET",offset,RTCtick+locus,waveTick,waveTick-(RTCtick+locus),"<-----")
+	logging.debug(f"->OFFSET {offset},{RTCtick+locus},{waveTick},{waveTick-(RTCtick+locus)}")
 	if offset >=wavelength*0.9:
-		print ("OFFSET to big:",offset," Probably missed PPS signal. Reseting")
+		logging.warning(f"OFFSET to big:{offset} Probably missed PPS signal. Reseting")
 		pi.wave_clear()
 		RTCsecond=0
 		RTCtick=0
