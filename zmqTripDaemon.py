@@ -241,7 +241,7 @@ if __name__ == '__main__':
 	processor=cmdProcesor()
 	context = zmq.Context()
 	socket = context.socket(zmq.REP)
-	zmq_end_point=f"tcp://*:{zmqTripPort}"
+	zmq_end_point=f"tcp://*:{zmqTriggerPort}"
 	socket.bind(zmq_end_point)
 	logging.info(f'Started zmq TRIP endpoint -> {zmq_end_point}')		
 	getSystemClockData()

@@ -12,9 +12,13 @@
     </div>
 <h2>Introduction</h2>
 CronoStamper is a raspberry aplication aim to get precise timestamping (microseconds) of events (pin state changes). 
-<h2>Ports</h2>
-Sockets port= 9999<p>
-zmqPort = 5556<p>
-zmqGPSPort = 5557<p>
+<h2>TCP Ports</h2>
+    <li>Shutter port = {{ ports.shutterPort }}<p>
+    <li>Trigger port = {{ ports.triggerPort }}<p>
+    <li>Ping Time port = {{ ports.pingPort }}<p></p>
+<h2>ZMQ Ports</h2>    
+    <li>Shutter port = {{ ports.zmqShutterPort }}<p>
+    <li>GPS port = {{ ports.zmqGPSPort }}<p>
+    <li>Trigger port = {{ ports.zmqTriggerPort }}<p>
 </BODY>
 </HTML>

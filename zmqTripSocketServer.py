@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 '''
-TRIP Sockets server- 
+TRIGGER Sockets server- 
 On connect send a string with the 
 timestamp of the last high SIGNAL.
 Then close the sockets
@@ -25,12 +25,12 @@ HOST = ''   # Symbolic name meaning all available interfaces
  # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-logging.info('Starting Trip TCP server')
+logging.info('Starting TRIGGER TCP server')
 
 #Bind socket to local host and port
 try:
-    s.bind((HOST, TripPort))
-    logging.info(f'Socket created {HOST}:{TripPort}')    
+    s.bind((HOST, triggerPort))
+    logging.info(f'Socket created {HOST}:{triggerPort}')    
 except socket.error as msg:
     logging.error(f'Bind failed. Error Code :{msg[0]} Message {msg[1]}')
     sys.exit()
@@ -81,9 +81,9 @@ def clientthread(conn):
     zmqSocket.REQ_CORRELATE=True
     zmqSocket.REQ_RELAXED= True
     zmqSocket.RCVTIMEO=200
-    zmq_trip_endpoint=f"tcp://localhost:{zmqTripPort}"
-    logging.info(f'Subscribed to TRIP zmq_endpoint:{zmq_trip_endpoint}')
-    zmqSocket.connect(zmq_trip_endpoint)
+    zmq_trigger_endpoint=f"tcp://localhost:{zmqTriggerPort}"
+    logging.info(f'Subscribed to TRIGGER zmq_endpoint:{zmq_trigger_endpoint}')
+    zmqSocket.connect(zmq_trigger_endpoint)
 
     #infinite loop so that function do not terminate and thread do not end.
     while RUN:
@@ -97,8 +97,8 @@ def clientthread(conn):
             print ("->",reply)
             conn.send(f'{reply}\n'.encode())
         except:
-            conn.send(f'TRIP DAEMON FAIL\n'.encode())
-            logging.error(f'TRIP DAEMON FAIL\n')
+            conn.send(f'TRIGGER DAEMON FAIL\n'.encode())
+            logging.error(f'TRIGGER DAEMON FAIL\n')
 
     #came out of loop
     #conn.shutdown(2)    # 0 = done receiving, 1 = done sending, 2 = both

@@ -27,15 +27,26 @@ fli={}
 fli['name']='CENTU1'
 fli['jpg']='fliCobalt.jpg'
 
-camera={u'name': u'stamper00', u'jpg': u'moon_big_small.png'}
+camera={u'name': u'cronostamper', u'jpg': u'moon_big_small.png'}
 
 debug=0
 zmqShutterPort = 5556
 zmqGPSPort = 5557
-zmqTripPort = 5558
-socketsPort = 9999
-TripPort = 9998
-httpPort= 5000
+zmqTriggerPort  = 5558
+shutterPort = 9999
+triggerPort = 9998
+httpPort = 5000
+pingPort = 5555
+
+ports={
+	'zmqShutterPort' : zmqShutterPort,
+	'zmqGPSPort' : zmqGPSPort,
+	'zmqTriggerPort' : zmqTriggerPort ,
+	'shutterPort' : shutterPort,
+	'triggerPort' : triggerPort,
+	'httpPort' : httpPort,
+	'pingPort':pingPort
+}
 
 #socat command have to be launch before:
 #'socat pty,link=/tmp/cronostamperCOM,raw TCP-LISTEN:27644,reuseaddr &'
@@ -141,5 +152,5 @@ def demogrify(topicmsg_):
     return topic, msg 
     
 if __name__ == '__main__':
-        chrony_getSystemClockData()
+        print(getSystemClockData())
 

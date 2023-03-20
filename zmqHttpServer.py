@@ -26,7 +26,7 @@ def index():
 
 @app.route('/help')
 def help():
-    return render_template('help.html')
+    return render_template('help.html',ports=ports)
 
 @app.route('/clock.json')
 def clock():
@@ -112,11 +112,11 @@ def clkStatus_ntpd():
 @app.route('/trigger.json')
 def trigger():
 	try:
-		tripSocket.send_string('NEXT')
-		reply=tripSocket.recv_string()
+		triggerSocket.send_string('NEXT')
+		reply=triggerSocket.recv_string()
 		triggerOK=True
 	except:
-		reply="TRIP DAEMON FAIL"
+		reply="TRIGGER DAEMON FAIL"
 		triggerOK=False
 	r={'nextTrip':reply,'triggerOK':triggerOK}
 	logging.debug(f'{r}')	
@@ -165,13 +165,13 @@ if __name__ == '__main__':
 	socketGPS.setsockopt(zmq.CONFLATE, 1)
 	socketGPS.connect (zmq_gps_endpoint)
 	socketGPS.setsockopt_string(zmq.SUBSCRIBE, GPStopicfilter)
-	tripSocket = context.socket(zmq.REQ)
-	tripSocket.REQ_CORRELATE=True
-	tripSocket.REQ_RELAXED= True
-	tripSocket.RCVTIMEO=200
-	zmq_trip_endpoint=f"tcp://localhost:{zmqTripPort}"
-	logging.info(f'Subscribed to TRIP zmq_endpoint:{zmq_trip_endpoint}')
-	tripSocket.connect(zmq_trip_endpoint)
+	triggerSocket = context.socket(zmq.REQ)
+	triggerSocket.REQ_CORRELATE=True
+	triggerSocket.REQ_RELAXED= True
+	triggerSocket.RCVTIMEO=200
+	zmq_trigger_endpoint=f"tcp://localhost:{zmqTriggerPort}"
+	logging.info(f'Subscribed to TRIGGER zmq_endpoint:{zmq_trigger_endpoint}')
+	triggerSocket.connect(zmq_trigger_endpoint)
 
 	#main loop
 	app.run(host='0.0.0.0',port=httpPort,debug=False)

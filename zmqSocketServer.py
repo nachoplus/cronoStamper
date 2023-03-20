@@ -20,7 +20,7 @@ from config import *
 
  
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = socketsPort # Arbitrary non-privileged port
+PORT = shutterPort # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 logging.info('Starting CronoStamper Sockets Server.')
@@ -73,7 +73,7 @@ def clientthread(conn,addr,n):
 
 		#format the reply string
 		if 'ClkMaxError' in clkData:
-			clkError=clkData['ClkMaxError']
+			clkError=clkData['ClkMaxError']/1000000.
 		else:
 			clkError=9999.
 		reply = "%s %010.6f %01.0d %5.3e\r\n" % (msg['dateUTC'],msg['pulse'],msg['shutterOK'],clkError)

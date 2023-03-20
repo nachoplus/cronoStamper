@@ -10,33 +10,34 @@ import sys
 import time
 import datetime
 import threading
+from config import *
  
 HOST = ''   # Symbolic name meaning all available interfaces
-PORT = 5555 # Arbitrary non-privileged port
+PORT = pingPort # Arbitrary non-privileged port
  
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-print('Starting CronoStamper ping Time.')
-print('Socket created')
+logging.info('Starting CronoStamper ping Time.')
+logging.info('Socket created')
  
 #Bind socket to local host and port
 try:
     s.bind((HOST, PORT))
 except socket.error as msg:
-    print('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
+    logging.error(f'Bind failed. Error Code : {msg[0]} Message {msg[1]}')
     sys.exit()
      
-print('Socket bind complete')
+logging.info(f'binded to {HOST}:{PORT}')
  
 #Start listening on socket
 s.listen(10)
-print('Socket now listening')
+logging.info('Socket now listening')
  
 
 def clientthread(conn,addr):
-    print( 'Connected with ' + addr[0] + ':' + str(addr[1]))
+    logging.info( f'Connected with {addr[0]}:{addr[1]}')
     d = str(datetime.datetime.now())
     conn.sendall(f'{d}\r\n'.encode())
-    print(d)
+    logging.info( f'Sent {d} to {addr[0]}:{addr[1]}. Disconnecting')    
     conn.close()
  
 #now keep talking with the client

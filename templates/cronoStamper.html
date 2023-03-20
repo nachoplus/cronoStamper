@@ -447,21 +447,21 @@ $(document).ready(function() {
 <BODY>
 <table aling="'center" class='container'>
 <tr>
-    <div align="center">
-
         <table aling="center" class='container'>
             <tr>
             <td width="200">
                 {% set im=url_for('static',filename= camera.jpg  ) %}
                 <img id='camera' src={{ im }} width="200"></img>
             </td>
-            <td align="left">
+            <td >
                 <h1 >{{ camera.name }}</h1>                
-                <h2 id='READY'></h2>            
+                <h1 id='READY'></h1>            
+            </td>
+            <td width="200">
             </td>
             </tr>
         </table>
-    </div>
+
 </tr>
 </table>
 <table class='container' >
