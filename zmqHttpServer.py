@@ -26,7 +26,7 @@ def index():
 
 @app.route('/help')
 def help():
-    return render_template('help.html',ports=ports)
+    return render_template('help.html',ports=ports,gpios=gpios,ShutterFlange=ShutterFlange)
 
 @app.route('/clock.json')
 def clock():

@@ -38,16 +38,6 @@ triggerPort = 9998
 httpPort = 5000
 pingPort = 5555
 
-ports={
-	'zmqShutterPort' : zmqShutterPort,
-	'zmqGPSPort' : zmqGPSPort,
-	'zmqTriggerPort' : zmqTriggerPort ,
-	'shutterPort' : shutterPort,
-	'triggerPort' : triggerPort,
-	'httpPort' : httpPort,
-	'pingPort':pingPort
-}
-
 #socat command have to be launch before:
 #'socat pty,link=/tmp/cronostamperCOM,raw TCP-LISTEN:27644,reuseaddr &'
 # used only by zmqSerial.py now NOT USED.
@@ -65,6 +55,24 @@ SIGNAL_GPIO=11
 PPS_GPIO=18
 TRIP_GPIO=4
 TRIP_WAVE_REF_GPIO=22
+
+ports={
+	'zmqShutterPort' : zmqShutterPort,
+	'zmqGPSPort' : zmqGPSPort,
+	'zmqTriggerPort' : zmqTriggerPort ,
+	'shutterPort' : shutterPort,
+	'triggerPort' : triggerPort,
+	'httpPort' : httpPort,
+	'pingPort':pingPort
+}
+
+gpios={
+	'SIGNAL_GPIO':SIGNAL_GPIO,
+	'PPS_GPIO':PPS_GPIO,
+	'TRIP_GPIO':TRIP_GPIO,
+	'TRIP_WAVE_REF_GPIO':TRIP_WAVE_REF_GPIO
+}
+
 
 logging.basicConfig(level=logging.INFO,format='%(asctime)s:%(module)s:%(levelname)s:%(message)s')
 
