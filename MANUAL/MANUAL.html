@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Introducci&oacute;n</title>
+        <style>
+/* From extension vscode.github */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+.vscode-dark img[src$=\#gh-light-mode-only],
+.vscode-light img[src$=\#gh-dark-mode-only] {
+	display: none;
+}
+
+</style>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+<style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', system-ui, 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        <style>
+.task-list-item {
+    list-style-type: none;
+}
+
+.task-list-item-checkbox {
+    margin-left: -20px;
+    vertical-align: middle;
+    pointer-events: none;
+}
+</style>
+        
+    </head>
+    <body class="vscode-body vscode-light">
+        <h1><center>CRONOSTAMPER</center></h1>
+<h1><center>MANUAL DE USUARIO</center></h1>
+<h1><center>Version 1</center></h1>
+<h1>Indice</h1>
+<ul>
+<li><a href="#introducci%C3%B3n">Introducción</a></li>
+<li><a href="#puesta-en-marcha">Puesta en marcha</a>
+<ul>
+<li><a href="#conexionado">Conexionado</a></li>
+<li><a href="#pantalla-de-control">Pantalla de control</a></li>
+<li><a href="#acceso-a-la-marca-de-tiempo">Acceso a la marca de tiempo</a></li>
+</ul>
+</li>
+<li><a href="#configuraci%C3%B3n">Configuración</a>
+<ul>
+<li><a href="#configuraci%C3%B3n-de-la-red">Configuración de la Red</a></li>
+<li><a href="#acceso-a-la-consola">Acceso a la consola</a>
+<ul>
+<li><a href="#configuraci%C3%B3n-de-la-aplicaci%C3%B3n">Configuración de la aplicación</a></li>
+</ul>
+</li>
+<li><a href="#descrici%C3%B3n-general">Descrición general</a>
+<ul>
+<li><a href="#hardware">Hardware:</a></li>
+<li><a href="#software">Software:</a></li>
+<li><a href="#funcionamiento">Funcionamiento</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="introducción">Introducción</h1>
+<p>El dispositivo <strong>CRONOSTAMPER</strong> tiene como función principal la obtención de marcas de tiempo de ultraprecisión. La marca se da en tiempo UTC y la precisión tipica es menor de 5 microsegundos.</p>
+<p>El cronostamper fue desarrollado originalmente para el registro preciso de tiempo UTC de las imagenes astronomicas captadas por las camaras CCD de observatorios astronomicos. Éste sigue siendo su uso principal.</p>
+<p>En su diseño se ha pretendido que sea lo mas sencillo de usar para su uso principal pero que admita todas las modificaciones que el usuario desee mediante el acceso completo al sistema operativo y al codigo fuente empleado. El el codigo de la aplicación es open source y la plataforma donde se ejecuta es la bien conocida Raspberry PI con el sistema operativo linux-debian Bookworm.</p>
+<p>Funciones secundarias:</p>
+<ul>
+<li>Incorpora una función para activar una señal (un pulso) en un instante muy preciso del tiempo UTC. Asi por ejemplo es posible, usando dos cronostamper en ubicaciones distantes, realizar un disparo simultáneo con la garantia de que a lo sumo diferiran en 10 microsegundos en el tiempo UTC. <strong>IMPORTANTE:</strong> está función está programada en el software pero no está cableada en el hardware. Se cablea bajo demanda al fabricante.</li>
+<li>Puede actuar como servidor de tiempos NTP para la red a la que está conectado.</li>
+</ul>
+<p><img src="file:////home/nacho/work/deimos/cronoStamper/MANUAL/vista_general.jpg" alt="Alt text"></p>
+<h1 id="puesta-en-marcha">Puesta en marcha</h1>
+<h2 id="conexionado">Conexionado</h2>
+<p>Para instalar el cronostamper hay que realizar las siguientes conexiones:</p>
+<ul>
+<li>Cable Ethernet</li>
+<li>Cable de alimentación USB-C</li>
+<li>RP-SMA hembra (reverse polarity SMA): conexionado del cable de la señal a medir (SIGNAL). Por ejemplo la señal de 'trigger' de una cámara CCD. Esta señal debe ser de entre 3.3 y 5V</li>
+<li>SMA hembra: antena exterior GPS</li>
+</ul>
+<p><strong>IMPORTANTE</strong>: Los conectores son diferentes y puede ocurrir daño mecanico si se conectan equivocadamente.</p>
+<h2 id="pantalla-de-control">Pantalla de control</h2>
+<p>Una vez energizado y conectado a la red se pude acceder a la pantalla de estado mediante cualquier navegador en la dirección http://[ip del cronostamper]:5000</p>
+<h2 id="acceso-a-la-marca-de-tiempo">Acceso a la marca de tiempo</h2>
+<p>Para acceder a los resultado de la marca de tiempos hay que conectarse al puerto TCP/IP definido en la variable socketsPort del archivo de configuracion <a href="http://config.py">config.py</a> (puerto por defecto 9999)</p>
+<p>Cada vez que se produce la activación de la señal SIGNAL la marca de tiempo es devuelta con el formato:</p>
+<pre><code>&quot;%s %010.6f %01.0d %5.3e\r\n&quot; % (msg['dateUTC'],msg['pulse'],ppsOK,clkError)
+</code></pre>
+<p>Este mismo mensaje tambien se envia mediante un publisher ZMQ en el puerto zmqShutterPort (por defecto el 5556)al que se puede acceder mediante cualquier software que integre este protocolo (pythom,C/C++, java, rust...todos los principales)</p>
+<p>A modo de ejemplo se muestra un programa basico de python:</p>
+<pre><code>  import zmq
+  from config import *
+      
+  # Socket to talk to server
+  context = zmq.Context()
+  socket = context.socket(zmq.SUB)
+  socket.connect (&quot;tcp://cronostamper:%s&quot; % zmqShutterPort)
+  topicfilter = ShutterFlange
+  socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
+
+  # Process
+  while True:
+    topic, msg  = demogrify(socket.recv())
+    print(&quot;%f&quot; % msg['unixUTC'])
+    #time.sleep(5)
+</code></pre>
+<h1 id="configuración">Configuración</h1>
+<p>Normalmente los cronostamper vienen configurados de fábrica no siendo necesario para su funcionamiento nada mas que realizar el cableado y conectarlo a la alimentación electrica. No obstante se explica aqui las acciones de configuración mas habituales que se puden realizar.</p>
+<h2 id="configuración-de-la-red">Configuración de la Red</h2>
+<p><a id="configuración-de-la-red"></a>
+Los cronostamper normalmente viene configurados de fábrica con la dirección IP y demás datos de red proporcionados por el cliente. En esta sección se explica como cabiarla si fuese necesario.</p>
+<p>El cronostamper gestiona su datos de conexión mediante la utilizar NetworkManager del linux. Se puede utilizar por tanto utilizando todos los comandos de esta herramienta. Se recomienda el uso del comando <strong>&quot;sudo nmtui&quot;</strong> desde una consola BASH ( ver <a href="#acceso-a-la-consola">Acceso a la consola</a> ) para poderlo configurar comodamente mediante interface grafica de terminal. Mediante este metodo se puede configurar tanto la ethernet cableada como la WiFi <strong>IMPORTANTE:</strong> Esta información es valida solo para la ultima versión del cronostamper con sistema operativo rapberry OS Bookworm.</p>
+<p>Adicionalmente los cronostampers están configurados para conectarse a cualquier punto de acceso WiFi, un telefono movil valdria, con nombre SSID cronostamper_net y password 2012DA14 con seguridad WPA-PKA. Esto es un mecanismo de backup en el caso de problemas de perdida de conectividad con la configuración de red. Se considera seguro porque el alcance WiFi de los cronostamper está bastante limitado (no mas de 10m) ya que están encapsulado en una caja metalica. No obstante el usuario puede desactivar este comportamiento utilizando la mencionada utilidad &quot;sudo nmtui&quot;.</p>
+<h2 id="acceso-a-la-consola">Acceso a la consola</h2>
+<p><a id="acceso-a-la-consola"></a></p>
+<p>Una vez que se tiene conectividad de red es posible acceder a la consola del sistema operativo para cualquier labor de mantenimento o reconfiguración. Para obtener conectividad de red ver <a href="#configuraci%C3%B3n-de-la-red">Configuración de la Red</a></p>
+<p>La consola bash del sistema operativo Raspbian OS (realmente linux debian bookworm) es accesible mediante basicamente dos metodos</p>
+<ul>
+<li>Acceso mediante conexión mediante teclado(USB) y pantalla(HDMI). En este caso solo hay que loggarse con el usuario/passwd:pi/albaricoque. Se considera seguro explicitar la contraseña aqui porque solo se permite el acceso local es decir a personas con acceso fisico al dispositivo.</li>
+<li>Acceso mediante SSH y clave privada. A los cronostamper se puede acceder mediante el protocolo ssh al puerto standard mediante la clave privada proporcionada &quot;cronostamper_feet&quot;. Existen tres usuario cronos, root y pi todos configurados con la misma clave privada. Se recomienda el uso del usuario &quot;pi&quot; y la ejecución de los comandos privilegiados mediante &quot;sudo&quot; con este usuario.</li>
+</ul>
+<h4 id="configuración-de-la-aplicación">Configuración de la aplicación</h4>
+<p>Existen varios aspectos configurables en la aplicación mediante la edición del fichero &quot;<a href="http://config.py">config.py</a>&quot; contenido en la raiz de la aplicación. Normalmente en la ruta /home/cronos/cronostamper.</p>
+<ul>
+<li>Cambio en el flanco de activación de la señal. Descomentar <strong>solo</strong> la linea de aplicación:<pre><code>#for pulse on open shutter (direct logic)
+ShutterFlange=&quot;SHUTTER_LOW&quot;
+#for pulse on close shutter (inverted logic)
+#ShutterFlange=&quot;SHUTTER_HIGH&quot;
+</code></pre>
+</li>
+<li>Cambio del nombre/imagen visualizada en la consola web. Modificar la siguiente linea:<pre><code>camera={u'name': u'stamper00', u'jpg': u'moon_big_small.png'}
+</code></pre>
+</li>
+</ul>
+<h2 id="descrición-general">Descrición general</h2>
+<p>NOTA: Esta sección se corresponde con la última versión del cronostamper. Versiones anteriores pueden tener diferentes hardware/software</p>
+<h3 id="hardware">Hardware:</h3>
+<ul>
+<li>Raspberry 4 B+</li>
+<li>Modulo GPS UBLOX M6 con generador de pulse per second (PPS)</li>
+</ul>
+<h3 id="software">Software:</h3>
+<ul>
+<li><a href="https://www.raspberrypi.com/software/">Raspberry OS Bookworm</a></li>
+<li>Modulos de software principales:
+<ul>
+<li><a href="https://chrony-project.org/">Chrony</a> (NTP daemon)</li>
+<li><a href="https://zeromq.org/">ZMQ</a> (mensajeria)</li>
+<li><a href="https://abyz.me.uk/rpi/pigpio/">PIGPIO</a> (adquisición de señal)</li>
+<li>La <a href="https://github.com/nachoplus/cronoStamper">aplicación cronostamper</a> compuesta de varios demonios independientes comunicados entre si mediante ZMQ</li>
+</ul>
+</li>
+</ul>
+<h3 id="funcionamiento">Funcionamiento</h3>
+<p>Las raspberrys tiene un reloj interno mantenido por un cristal de cuarzo con una precisión tipica del orden de 10 ppm (partes por millón). Esto es suficiente para las aplicaciones habituales incluso para el funcionamiento normal de cualquier PC.</p>
+<p>Sin embargo 10ppm significa una deriva de 10 microsegundos por cada segundo (casi un 1 segundo por cada día). Al margen de esta deriva tambien existe la necesidad de sincronizar el tiempo con el tiempo UTC. Estos dos factores invalidan el uso de ordenadores generales para aplicaciones de marca de tiempo UTC de alta precisión.</p>
+<p>Para solucionar la situación es necesario sincronizar con una fuente de tiempo externa y disciplinar el reloj interno para evitar su deriva.</p>
+<p>El cronostamper está configurado para actuar como un servidor NTP stratum 0 obteniendo el tiempo UTC de la señal GPS y discipliando su reloj interno utilizando las señal PPS (pulse per second) del modulo GPS.</p>
+
+        
+        
+    </body>
+    </html>
