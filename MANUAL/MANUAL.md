@@ -97,7 +97,7 @@ Los cronostamper normalmente viene configurados de fábrica con la dirección IP
 
 El cronostamper gestiona su datos de conexión mediante la utilidad [NetworkManager](https://networkmanager.dev/) del linux. Se puede utilizar por tanto utilizando todos los comandos de esta herramienta. Se recomienda el uso del comando **"sudo nmtui"** desde una consola BASH ( ver [Acceso a la consola](#acceso-a-la-consola) ) para poderlo configurar comodamente mediante interface grafica de terminal. Mediante este metodo se puede configurar tanto la ethernet cableada como la WiFi **IMPORTANTE:** Esta información es valida solo para la ultima versión del cronostamper con sistema operativo rapberry OS Bookworm.
 
-Adicionalmente los cronostampers están configurados para conectarse a cualquier punto de acceso WiFi, un telefono movil valdria, con nombre SSID cronostamper_net y password 2012DA14 con seguridad WPA-PKA. Esto es un mecanismo de backup en el caso de problemas de perdida de conectividad con la configuración de red. Se considera seguro porque el alcance WiFi de los cronostamper está bastante limitado (no mas de 10m) ya que el dispositivo está encapsulado en una caja metalica. No obstante el usuario puede desactivar este comportamiento utilizando la mencionada utilidad "sudo nmtui".
+Adicionalmente los cronostampers están configurados para conectarse a cualquier punto de acceso WiFi, un telefono movil valdria, con nombre SSID cronostamper_net y password entregado en la tarjeta de claves con seguridad WPA-PKA. Esto es un mecanismo de backup en el caso de problemas de perdida de conectividad con la configuración de red. Se considera seguro porque el alcance WiFi de los cronostamper está bastante limitado (no mas de 10m) ya que el dispositivo está encapsulado en una caja metalica. No obstante el usuario puede desactivar este comportamiento utilizando la mencionada utilidad "sudo nmtui".
 
 ## Acceso a la consola
 <a id="acceso-a-la-consola"></a>
@@ -105,7 +105,7 @@ Adicionalmente los cronostampers están configurados para conectarse a cualquier
 Una vez que se tiene conectividad de red es posible acceder a la consola del sistema operativo para cualquier labor de mantenimento o reconfiguración. Para obtener conectividad de red ver [Configuración de la Red](#configuración-de-la-red)
 
 La consola bash del sistema operativo Raspbian OS (realmente linux debian bookworm) es accesible mediante basicamente dos metodos
-* Acceso mediante conexión mediante teclado(USB) y pantalla(HDMI), en este caso no es necesaria tener conectividad de red. Solo hay que loggarse con el usuario/passwd:pi/albaricoque. Se considera seguro explicitar la contraseña aqui porque solo se permite el acceso local es decir a personas con acceso fisico al dispositivo.
+* Acceso mediante conexión mediante teclado(USB) y pantalla(HDMI), en este caso no es necesaria tener conectividad de red. Solo hay que loggarse con el usuario "pi" y el password entregado en la tarjeta de claves. Se considera seguro porque solo se permite el acceso local es decir a personas con acceso fisico al dispositivo.
 * Acceso mediante SSH y clave privada. A los cronostamper se puede acceder mediante el protocolo ssh al puerto standard mediante la clave privada proporcionada "cronostamper_feet". Existen tres usuario cronos, root y pi todos configurados con la misma clave privada. Se recomienda el uso del usuario "pi" y la ejecución de los comandos privilegiados mediante "sudo" con este usuario.
 
 #### Configuración de la aplicación
