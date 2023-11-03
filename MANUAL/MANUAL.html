@@ -98,11 +98,13 @@
 <p>Cada vez que se produce la activación de la señal SIGNAL la marca de tiempo es devuelta con el formato:</p>
 <pre><code>&quot;%s %010.6f %01.0d %5.3e\r\n&quot; % (msg['dateUTC'],msg['pulse'],ppsOK,clkError)
 </code></pre>
-<p>Este mismo mensaje tambien se envia mediante un publisher ZMQ en el puerto zmqShutterPort (por defecto el 5556)al que se puede acceder mediante cualquier software que integre este protocolo (pythom,C/C++, java, rust...todos los principales)</p>
+<p>Este mismo mensaje tambien se envia mediante un publisher ZMQ en el puerto zmqShutterPort (por defecto el 5556) al que se puede acceder mediante cualquier software que integre este protocolo (pythom,C/C++, java, rust...practicamente todos)</p>
 <p>A modo de ejemplo se muestra un programa basico de python:</p>
 <pre><code>  import zmq
-  from config import *
-      
+  import json
+  
+  zmqShutterPort=5556
+  ShutterFlange=&quot;SHUTTER_LOW&quot;    
   # Socket to talk to server
   context = zmq.Context()
   socket = context.socket(zmq.SUB)
@@ -110,25 +112,33 @@
   topicfilter = ShutterFlange
   socket.setsockopt(zmq.SUBSCRIBE, topicfilter)
 
+  def demogrify(topicmsg):
+    &quot;&quot;&quot; Inverse of mogrify() &quot;&quot;&quot;
+    json0 = topicmsg.find('{')
+    topic = topicmsg[0:json0].strip()
+    msg = json.loads(topicmsg[json0:])
+    return topic, msg 
+
   # Process
   while True:
     topic, msg  = demogrify(socket.recv())
     print(&quot;%f&quot; % msg['unixUTC'])
     #time.sleep(5)
+
 </code></pre>
 <h1 id="configuración">Configuración</h1>
 <p>Normalmente los cronostamper vienen configurados de fábrica no siendo necesario para su funcionamiento nada mas que realizar el cableado y conectarlo a la alimentación electrica. No obstante se explica aqui las acciones de configuración mas habituales que se puden realizar.</p>
 <h2 id="configuración-de-la-red">Configuración de la Red</h2>
 <p><a id="configuración-de-la-red"></a>
 Los cronostamper normalmente viene configurados de fábrica con la dirección IP y demás datos de red proporcionados por el cliente. En esta sección se explica como cabiarla si fuese necesario.</p>
-<p>El cronostamper gestiona su datos de conexión mediante la utilizar NetworkManager del linux. Se puede utilizar por tanto utilizando todos los comandos de esta herramienta. Se recomienda el uso del comando <strong>&quot;sudo nmtui&quot;</strong> desde una consola BASH ( ver <a href="#acceso-a-la-consola">Acceso a la consola</a> ) para poderlo configurar comodamente mediante interface grafica de terminal. Mediante este metodo se puede configurar tanto la ethernet cableada como la WiFi <strong>IMPORTANTE:</strong> Esta información es valida solo para la ultima versión del cronostamper con sistema operativo rapberry OS Bookworm.</p>
-<p>Adicionalmente los cronostampers están configurados para conectarse a cualquier punto de acceso WiFi, un telefono movil valdria, con nombre SSID cronostamper_net y password 2012DA14 con seguridad WPA-PKA. Esto es un mecanismo de backup en el caso de problemas de perdida de conectividad con la configuración de red. Se considera seguro porque el alcance WiFi de los cronostamper está bastante limitado (no mas de 10m) ya que están encapsulado en una caja metalica. No obstante el usuario puede desactivar este comportamiento utilizando la mencionada utilidad &quot;sudo nmtui&quot;.</p>
+<p>El cronostamper gestiona su datos de conexión mediante la utilidad <a href="https://networkmanager.dev/">NetworkManager</a> del linux. Se puede utilizar por tanto utilizando todos los comandos de esta herramienta. Se recomienda el uso del comando <strong>&quot;sudo nmtui&quot;</strong> desde una consola BASH ( ver <a href="#acceso-a-la-consola">Acceso a la consola</a> ) para poderlo configurar comodamente mediante interface grafica de terminal. Mediante este metodo se puede configurar tanto la ethernet cableada como la WiFi <strong>IMPORTANTE:</strong> Esta información es valida solo para la ultima versión del cronostamper con sistema operativo rapberry OS Bookworm.</p>
+<p>Adicionalmente los cronostampers están configurados para conectarse a cualquier punto de acceso WiFi, un telefono movil valdria, con nombre SSID cronostamper_net y password entregado en la tarjeta de claves con seguridad WPA-PKA. Esto es un mecanismo de backup en el caso de problemas de perdida de conectividad con la configuración de red. Se considera seguro porque el alcance WiFi de los cronostamper está bastante limitado (no mas de 10m) ya que el dispositivo está encapsulado en una caja metalica. No obstante el usuario puede desactivar este comportamiento utilizando la mencionada utilidad &quot;sudo nmtui&quot;.</p>
 <h2 id="acceso-a-la-consola">Acceso a la consola</h2>
 <p><a id="acceso-a-la-consola"></a></p>
 <p>Una vez que se tiene conectividad de red es posible acceder a la consola del sistema operativo para cualquier labor de mantenimento o reconfiguración. Para obtener conectividad de red ver <a href="#configuraci%C3%B3n-de-la-red">Configuración de la Red</a></p>
 <p>La consola bash del sistema operativo Raspbian OS (realmente linux debian bookworm) es accesible mediante basicamente dos metodos</p>
 <ul>
-<li>Acceso mediante conexión mediante teclado(USB) y pantalla(HDMI). En este caso solo hay que loggarse con el usuario/passwd:pi/albaricoque. Se considera seguro explicitar la contraseña aqui porque solo se permite el acceso local es decir a personas con acceso fisico al dispositivo.</li>
+<li>Acceso mediante conexión mediante teclado(USB) y pantalla(HDMI), en este caso no es necesaria tener conectividad de red. Solo hay que loggarse con el usuario &quot;pi&quot; y el password entregado en la tarjeta de claves. Se considera seguro porque solo se permite el acceso local es decir a personas con acceso fisico al dispositivo.</li>
 <li>Acceso mediante SSH y clave privada. A los cronostamper se puede acceder mediante el protocolo ssh al puerto standard mediante la clave privada proporcionada &quot;cronostamper_feet&quot;. Existen tres usuario cronos, root y pi todos configurados con la misma clave privada. Se recomienda el uso del usuario &quot;pi&quot; y la ejecución de los comandos privilegiados mediante &quot;sudo&quot; con este usuario.</li>
 </ul>
 <h4 id="configuración-de-la-aplicación">Configuración de la aplicación</h4>
@@ -153,7 +163,7 @@ ShutterFlange=&quot;SHUTTER_LOW&quot;
 </ul>
 <h3 id="software">Software:</h3>
 <ul>
-<li><a href="https://www.raspberrypi.com/software/">Raspberry OS Bookworm</a></li>
+<li>Sistema operativo: <a href="https://www.raspberrypi.com/software/">Raspberry OS Bookworm</a></li>
 <li>Modulos de software principales:
 <ul>
 <li><a href="https://chrony-project.org/">Chrony</a> (NTP daemon)</li>
